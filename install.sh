@@ -10,7 +10,7 @@ set -euo pipefail
 # ============================================================
 
 if [[ "${EUID}" -ne 0 ]]; then
-  echo "Please run as root: sudo bash $0"
+  echo "Please run as root / 请使用 root 运行 / root 권한으로 실행 / root で実行: sudo bash $0"
   exit 1
 fi
 
@@ -189,6 +189,26 @@ t() {
         critical_need_apt) echo "Critical: apt-get is required." ;;
         preflight_warnings) echo "Preflight warnings:" ;;
         aborted_by_user) echo "Aborted by user." ;;
+        note_a_records) echo "A records" ;;
+        note_server_ip) echo "Server IP" ;;
+        label_running) echo "running" ;;
+        label_configured) echo "configured" ;;
+        label_expected) echo "expected" ;;
+        label_actual) echo "actual" ;;
+        label_log) echo "log" ;;
+        summary_images) echo "Images" ;;
+        summary_mtg) echo "MTG" ;;
+        summary_dd) echo "DD" ;;
+        summary_ee_link) echo "EE (FakeTLS)" ;;
+        summary_dd_link) echo "DD (padding)" ;;
+        usage_title) echo "Usage:" ;;
+        usage_notes) echo "Notes:" ;;
+        usage_no_args) echo "No arguments: open interactive menu." ;;
+        usage_self_update) echo "self-update pulls latest script repository (fast-forward only)." ;;
+        usage_migrate) echo "migrate imports legacy running containers into env+systemd management." ;;
+        usage_rollback) echo "rollback restores config and units from latest/specified backup." ;;
+        usage_install) echo "install command starts interactive install flow." ;;
+        usage_rotate_dd) echo "rotate-secret for DD accepts 32-hex or dd+32-hex." ;;
       esac
       ;;
     zh)
@@ -327,6 +347,26 @@ t() {
         critical_need_apt) echo "关键错误：需要 apt-get。" ;;
         preflight_warnings) echo "前置检查警告：" ;;
         aborted_by_user) echo "用户已中止。" ;;
+        note_a_records) echo "A 记录" ;;
+        note_server_ip) echo "本机 IP" ;;
+        label_running) echo "运行中" ;;
+        label_configured) echo "配置值" ;;
+        label_expected) echo "期望" ;;
+        label_actual) echo "实际" ;;
+        label_log) echo "日志" ;;
+        summary_images) echo "镜像" ;;
+        summary_mtg) echo "MTG" ;;
+        summary_dd) echo "DD" ;;
+        summary_ee_link) echo "EE (FakeTLS)" ;;
+        summary_dd_link) echo "DD (padding)" ;;
+        usage_title) echo "用法：" ;;
+        usage_notes) echo "说明：" ;;
+        usage_no_args) echo "不带参数：进入交互式主菜单。" ;;
+        usage_self_update) echo "self-update：快速前进方式更新脚本仓库。" ;;
+        usage_migrate) echo "migrate：将旧版运行容器纳入 env+systemd 托管。" ;;
+        usage_rollback) echo "rollback：从最新或指定备份恢复配置与 unit。" ;;
+        usage_install) echo "install 命令：直接进入交互式安装流程。" ;;
+        usage_rotate_dd) echo "DD 的 rotate-secret 支持 32hex 或 dd+32hex。" ;;
       esac
       ;;
     ko)
@@ -465,6 +505,26 @@ t() {
         critical_need_apt) echo "치명적 오류: apt-get 이 필요합니다." ;;
         preflight_warnings) echo "사전 점검 경고:" ;;
         aborted_by_user) echo "사용자에 의해 중단되었습니다." ;;
+        note_a_records) echo "A 레코드" ;;
+        note_server_ip) echo "서버 IP" ;;
+        label_running) echo "실행값" ;;
+        label_configured) echo "설정값" ;;
+        label_expected) echo "기대값" ;;
+        label_actual) echo "실제값" ;;
+        label_log) echo "로그" ;;
+        summary_images) echo "이미지" ;;
+        summary_mtg) echo "MTG" ;;
+        summary_dd) echo "DD" ;;
+        summary_ee_link) echo "EE (FakeTLS)" ;;
+        summary_dd_link) echo "DD (padding)" ;;
+        usage_title) echo "사용법:" ;;
+        usage_notes) echo "참고:" ;;
+        usage_no_args) echo "인자 없이 실행: 대화형 메뉴를 엽니다." ;;
+        usage_self_update) echo "self-update: 스크립트 저장소를 fast-forward로 업데이트합니다." ;;
+        usage_migrate) echo "migrate: 레거시 실행 컨테이너를 env+systemd 관리로 전환합니다." ;;
+        usage_rollback) echo "rollback: 최신/지정 백업에서 설정과 unit을 복원합니다." ;;
+        usage_install) echo "install 명령: 대화형 설치 흐름을 바로 시작합니다." ;;
+        usage_rotate_dd) echo "DD rotate-secret는 32-hex 또는 dd+32-hex를 지원합니다." ;;
       esac
       ;;
     ja)
@@ -603,6 +663,26 @@ t() {
         critical_need_apt) echo "重大: apt-get が必要です。" ;;
         preflight_warnings) echo "事前チェック警告:" ;;
         aborted_by_user) echo "ユーザーにより中断しました。" ;;
+        note_a_records) echo "A レコード" ;;
+        note_server_ip) echo "サーバー IP" ;;
+        label_running) echo "実行値" ;;
+        label_configured) echo "設定値" ;;
+        label_expected) echo "期待値" ;;
+        label_actual) echo "実測値" ;;
+        label_log) echo "ログ" ;;
+        summary_images) echo "イメージ" ;;
+        summary_mtg) echo "MTG" ;;
+        summary_dd) echo "DD" ;;
+        summary_ee_link) echo "EE (FakeTLS)" ;;
+        summary_dd_link) echo "DD (padding)" ;;
+        usage_title) echo "使い方:" ;;
+        usage_notes) echo "注記:" ;;
+        usage_no_args) echo "引数なし: 対話式メニューを開きます。" ;;
+        usage_self_update) echo "self-update: スクリプトリポジトリを fast-forward で更新します。" ;;
+        usage_migrate) echo "migrate: 旧稼働コンテナを env+systemd 管理に取り込みます。" ;;
+        usage_rollback) echo "rollback: 最新/指定バックアップから設定と unit を復元します。" ;;
+        usage_install) echo "install コマンド: 対話式インストールを直接開始します。" ;;
+        usage_rotate_dd) echo "DD の rotate-secret は 32-hex または dd+32-hex を受け付けます。" ;;
       esac
       ;;
   esac
@@ -880,8 +960,8 @@ check_domain_dns() {
 
   if [[ -n "$server_ip" ]] && ! grep -qx "$server_ip" <<<"$records"; then
     printf '%s (%s)\n' "$(t warn_dns_mismatch)" "${domain}"
-    echo "A records: $(tr '\n' ' ' <<<"$records" | xargs)"
-    echo "Server IP: ${server_ip}"
+    echo "$(t note_a_records): $(tr '\n' ' ' <<<"$records" | xargs)"
+    echo "$(t note_server_ip): ${server_ip}"
     confirm_continue || return 1
   fi
 }
@@ -915,8 +995,8 @@ validate_image_refs() {
 }
 
 usage() {
-  cat <<'EOF'
-Usage:
+  cat <<EOF
+$(t usage_title)
   install.sh [install]
   install.sh migrate [--mode ee|dd|all] [--ee-domain DOMAIN] [--dd-domain DOMAIN] [--front-domain DOMAIN]
   install.sh rollback [--mode ee|dd|all] [--backup-id ID]
@@ -927,13 +1007,13 @@ Usage:
   install.sh self-heal [--mode ee|dd|all]
   install.sh rotate-secret --mode ee|dd [--secret SECRET] [--front-domain DOMAIN]
 
-Notes:
-  - No arguments: open interactive menu.
-  - migrate imports legacy running containers (mtg-ee / mtproto-dd) into env+systemd management.
-  - rollback restores config and units from latest backup or specified backup ID.
-  - self-update pulls the latest script repository by fast-forward only.
-  - 'install' command: start interactive install flow directly.
-  - rotate-secret for DD accepts either 32-hex or dd+32-hex.
+$(t usage_notes)
+  - $(t usage_no_args)
+  - $(t usage_migrate)
+  - $(t usage_rollback)
+  - $(t usage_self_update)
+  - $(t usage_install)
+  - $(t usage_rotate_dd)
 EOF
 }
 
@@ -1484,7 +1564,7 @@ check_mode_health() {
 
   running_image="$(docker inspect -f '{{.Config.Image}}' "$container_name" 2>/dev/null || true)"
   if [[ -n "$expected_image" && -n "$running_image" && "$running_image" != "$expected_image" ]]; then
-    printf '[%s] %s: running=%s configured=%s\n' "$mode" "$(t hc_image_mismatch)" "$running_image" "$expected_image"
+    printf '[%s] %s: %s=%s %s=%s\n' "$mode" "$(t hc_image_mismatch)" "$(t label_running)" "$running_image" "$(t label_configured)" "$expected_image"
     ok=1
   fi
 
@@ -1492,7 +1572,7 @@ check_mode_health() {
   actual_bind_port="$(docker_binding_port "$container_name" "$container_port_key")"
   if [[ -n "$actual_bind_port" ]] && { [[ "$actual_bind_port" != "$port" ]] || [[ "$actual_bind_ip" != "$bind_ip" ]]; }; then
     echo "[${mode}] $(t err_port_binding_mismatch)"
-    echo "[${mode}] expected=${bind_ip}:${port} actual=${actual_bind_ip}:${actual_bind_port}"
+    echo "[${mode}] $(t label_expected)=${bind_ip}:${port} $(t label_actual)=${actual_bind_ip}:${actual_bind_port}"
     ok=1
   fi
 
@@ -1507,7 +1587,7 @@ check_mode_health() {
   fi
   if docker_container_exists "$container_name"; then
     echo "[${mode}] $(t note_recent_logs)"
-    docker logs --tail 5 "$container_name" 2>&1 | sed "s/^/[${mode}] log: /" || true
+    docker logs --tail 5 "$container_name" 2>&1 | sed "s/^/[${mode}] $(t label_log): /" || true
   fi
   return 1
 }
@@ -2068,21 +2148,21 @@ EOF
   t step_summary
   t note_secret
   echo
-  echo "Images       :"
+  echo "$(t summary_images)       :"
   if [[ "$DEPLOY_EE" -eq 1 ]]; then
-    echo "MTG          : ${MTG_IMAGE}"
+    echo "$(t summary_mtg)          : ${MTG_IMAGE}"
   fi
   if [[ "$DEPLOY_DD" -eq 1 ]]; then
-    echo "DD           : ${DD_IMAGE}"
+    echo "$(t summary_dd)           : ${DD_IMAGE}"
   fi
   echo
 
   if [[ "$DEPLOY_EE" -eq 1 ]]; then
-    echo "EE (FakeTLS): tg://proxy?server=${EE_DOMAIN}&port=${EE_PORT}&secret=${EE_SECRET}"
+    echo "$(t summary_ee_link): tg://proxy?server=${EE_DOMAIN}&port=${EE_PORT}&secret=${EE_SECRET}"
     echo
   fi
   if [[ "$DEPLOY_DD" -eq 1 ]]; then
-    echo "DD (padding): tg://proxy?server=${DD_DOMAIN}&port=${DD_PORT}&secret=${DD_SECRET}"
+    echo "$(t summary_dd_link): tg://proxy?server=${DD_DOMAIN}&port=${DD_PORT}&secret=${DD_SECRET}"
     echo
   fi
   cmd_healthcheck || true
