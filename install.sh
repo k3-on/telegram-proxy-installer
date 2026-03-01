@@ -119,6 +119,7 @@ t() {
         menu_uninstall) echo "uninstall" ;;
         menu_help) echo "help" ;;
         menu_exit) echo "exit" ;;
+        menu_press_enter) echo "Press Enter to return to menu..." ;;
         ask_oper_mode) echo "Select mode:" ;;
         ask_rotate_mode) echo "Select rotate mode:" ;;
         ask_new_mtg_image) echo "Enter new MTG image digest (blank=keep current): " ;;
@@ -256,6 +257,7 @@ t() {
         menu_uninstall) echo "卸载" ;;
         menu_help) echo "帮助" ;;
         menu_exit) echo "退出" ;;
+        menu_press_enter) echo "按回车返回菜单..." ;;
         ask_oper_mode) echo "请选择模式：" ;;
         ask_rotate_mode) echo "请选择轮换模式：" ;;
         ask_new_mtg_image) echo "请输入新的 MTG 镜像 digest（留空=保持当前）： " ;;
@@ -393,6 +395,7 @@ t() {
         menu_uninstall) echo "제거" ;;
         menu_help) echo "도움말" ;;
         menu_exit) echo "종료" ;;
+        menu_press_enter) echo "엔터를 눌러 메뉴로 돌아가기..." ;;
         ask_oper_mode) echo "모드를 선택하세요:" ;;
         ask_rotate_mode) echo "시크릿 교체 모드를 선택하세요:" ;;
         ask_new_mtg_image) echo "새 MTG 이미지 digest 입력 (빈값=현재 유지): " ;;
@@ -530,6 +533,7 @@ t() {
         menu_uninstall) echo "アンインストール" ;;
         menu_help) echo "ヘルプ" ;;
         menu_exit) echo "終了" ;;
+        menu_press_enter) echo "Enterキーでメニューに戻ります..." ;;
         ask_oper_mode) echo "モードを選択してください:" ;;
         ask_rotate_mode) echo "シークレット更新モードを選択してください:" ;;
         ask_new_mtg_image) echo "新しいMTGイメージdigestを入力（空欄=現状維持）: " ;;
@@ -2137,6 +2141,13 @@ prompt_mode_rotate() {
   done
 }
 
+pause_menu() {
+  local _
+  echo
+  read -r -p "$(t menu_press_enter)" _
+  echo
+}
+
 interactive_menu() {
   local choice=""
   local mode=""
@@ -2172,16 +2183,19 @@ interactive_menu() {
     case "$choice" in
       1)
         SKIP_LANGUAGE_PROMPT=1 command_install
+        pause_menu
         ;;
       2)
         mode="$(prompt_mode_all)"
         set_mode_flags "$mode" || continue
         cmd_healthcheck || true
+        pause_menu
         ;;
       3)
         mode="$(prompt_mode_all)"
         set_mode_flags "$mode" || continue
         cmd_self_heal || true
+        pause_menu
         ;;
       4)
         mode="$(prompt_mode_all)"
@@ -2197,9 +2211,11 @@ interactive_menu() {
         if cmd_upgrade "$mtg_image_arg" "$dd_image_arg"; then
           cmd_healthcheck || true
         fi
+        pause_menu
         ;;
       5)
         cmd_self_update
+        pause_menu
         ;;
       6)
         mode="$(prompt_mode_all)"
@@ -2216,12 +2232,14 @@ interactive_menu() {
           ask_domain ask_dd_domain migrate_dd_domain
         fi
         cmd_migrate "$migrate_ee_domain" "$migrate_dd_domain" "$migrate_front_domain"
+        pause_menu
         ;;
       7)
         mode="$(prompt_mode_all)"
         set_mode_flags "$mode" || continue
         read -rp "$(t ask_backup_id)" backup_id
         cmd_rollback "$backup_id"
+        pause_menu
         ;;
       8)
         rotate_mode="$(prompt_mode_rotate)"
@@ -2234,6 +2252,7 @@ interactive_menu() {
           set_mode_flags "$rotate_mode" || continue
           cmd_healthcheck || true
         fi
+        pause_menu
         ;;
       9)
         mode="$(prompt_mode_all)"
@@ -2241,9 +2260,11 @@ interactive_menu() {
         if confirm_continue; then
           cmd_uninstall
         fi
+        pause_menu
         ;;
       10)
         usage
+        pause_menu
         ;;
       0)
         return 0
