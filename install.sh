@@ -1276,7 +1276,7 @@ Restart=always
 RestartSec=5
 EnvironmentFile=/etc/telegram-proxy/dd.env
 ExecStartPre=-/usr/bin/docker rm -f mtproto-dd
-ExecStart=/usr/bin/docker run --name mtproto-dd --cap-drop=ALL --security-opt=no-new-privileges --pids-limit=256 -p ${DD_BIND_IP}:${DD_PORT}:443 -e SECRET=${DD_BASE_SECRET} ${DD_IMAGE}
+ExecStart=/usr/bin/docker run --name mtproto-dd --cap-drop=ALL --cap-add=NET_BIND_SERVICE --security-opt=no-new-privileges --pids-limit=256 -p ${DD_BIND_IP}:${DD_PORT}:443 -e SECRET=${DD_BASE_SECRET} ${DD_IMAGE}
 ExecStop=/usr/bin/docker stop -t 10 mtproto-dd
 ExecStopPost=-/usr/bin/docker rm -f mtproto-dd
 
