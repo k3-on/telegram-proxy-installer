@@ -113,7 +113,7 @@ t() {
         menu_install) echo "install" ;;
         menu_healthcheck) echo "healthcheck" ;;
         menu_self_heal) echo "self-heal" ;;
-        menu_upgrade) echo "upgrade" ;;
+        menu_upgrade) echo "upgrade images (EE/DD)" ;;
         menu_self_update) echo "self-update" ;;
         menu_rotate_secret) echo "rotate-secret" ;;
         menu_uninstall) echo "uninstall" ;;
@@ -122,8 +122,9 @@ t() {
         menu_press_enter) echo "Press Enter to return to menu..." ;;
         ask_oper_mode) echo "Select mode:" ;;
         ask_rotate_mode) echo "Select rotate mode:" ;;
-        ask_new_mtg_image) echo "Enter new MTG image digest (blank=keep current): " ;;
-        ask_new_dd_image) echo "Enter new DD image digest (blank=keep current): " ;;
+        ask_new_mtg_image) echo "Enter new MTG image digest (blank=keep current, auto=latest digest): " ;;
+        ask_new_dd_image) echo "Enter new DD image digest (blank=keep current, auto=latest digest): " ;;
+        note_upgrade_scope) echo "This upgrades image digests and restarts services only; domains, ports, and secrets stay unchanged." ;;
         ask_new_secret) echo "Enter new secret (blank=auto for EE): " ;;
         ask_front_for_auto_secret) echo "Enter front-domain for EE auto secret (blank=keep current): " ;;
         ask_bind_ip_mode) echo "Choose bind IP:" ;;
@@ -275,7 +276,7 @@ t() {
         menu_install) echo "安装" ;;
         menu_healthcheck) echo "健康检查" ;;
         menu_self_heal) echo "自愈" ;;
-        menu_upgrade) echo "升级" ;;
+        menu_upgrade) echo "升级镜像（EE/DD）" ;;
         menu_self_update) echo "脚本自更新" ;;
         menu_rotate_secret) echo "轮换密钥" ;;
         menu_uninstall) echo "卸载" ;;
@@ -284,8 +285,9 @@ t() {
         menu_press_enter) echo "按回车返回菜单..." ;;
         ask_oper_mode) echo "请选择模式：" ;;
         ask_rotate_mode) echo "请选择轮换模式：" ;;
-        ask_new_mtg_image) echo "请输入新的 MTG 镜像 digest（留空=保持当前）： " ;;
-        ask_new_dd_image) echo "请输入新的 DD 镜像 digest（留空=保持当前）： " ;;
+        ask_new_mtg_image) echo "请输入新的 MTG 镜像 digest（留空=保持当前，auto=自动检测最新 digest）： " ;;
+        ask_new_dd_image) echo "请输入新的 DD 镜像 digest（留空=保持当前，auto=自动检测最新 digest）： " ;;
+        note_upgrade_scope) echo "此操作仅升级镜像 digest 并重启服务，不会修改域名、端口、密钥。" ;;
         ask_new_secret) echo "请输入新 secret（留空=EE 自动生成）： " ;;
         ask_front_for_auto_secret) echo "请输入 EE 自动生成 secret 的 front-domain（留空=保持当前）： " ;;
         ask_bind_ip_mode) echo "请选择绑定 IP：" ;;
@@ -437,7 +439,7 @@ t() {
         menu_install) echo "설치" ;;
         menu_healthcheck) echo "상태 점검" ;;
         menu_self_heal) echo "자동 복구" ;;
-        menu_upgrade) echo "업그레이드" ;;
+        menu_upgrade) echo "이미지 업그레이드(EE/DD)" ;;
         menu_self_update) echo "스크립트 자체 업데이트" ;;
         menu_rotate_secret) echo "시크릿 교체" ;;
         menu_uninstall) echo "제거" ;;
@@ -446,8 +448,9 @@ t() {
         menu_press_enter) echo "엔터를 눌러 메뉴로 돌아가기..." ;;
         ask_oper_mode) echo "모드를 선택하세요:" ;;
         ask_rotate_mode) echo "시크릿 교체 모드를 선택하세요:" ;;
-        ask_new_mtg_image) echo "새 MTG 이미지 digest 입력 (빈값=현재 유지): " ;;
-        ask_new_dd_image) echo "새 DD 이미지 digest 입력 (빈값=현재 유지): " ;;
+        ask_new_mtg_image) echo "새 MTG 이미지 digest 입력 (빈값=현재 유지, auto=최신 digest 자동 감지): " ;;
+        ask_new_dd_image) echo "새 DD 이미지 digest 입력 (빈값=현재 유지, auto=최신 digest 자동 감지): " ;;
+        note_upgrade_scope) echo "이 작업은 이미지 digest 업데이트와 서비스 재시작만 수행하며, 도메인/포트/시크릿은 변경하지 않습니다." ;;
         ask_new_secret) echo "새 시크릿 입력 (빈값=EE 자동 생성): " ;;
         ask_front_for_auto_secret) echo "EE 자동 시크릿용 front-domain 입력 (빈값=현재 유지): " ;;
         ask_bind_ip_mode) echo "바인드 IP를 선택하세요:" ;;
@@ -599,7 +602,7 @@ t() {
         menu_install) echo "インストール" ;;
         menu_healthcheck) echo "ヘルスチェック" ;;
         menu_self_heal) echo "自動復旧" ;;
-        menu_upgrade) echo "アップグレード" ;;
+        menu_upgrade) echo "イメージ更新（EE/DD）" ;;
         menu_self_update) echo "スクリプト自己更新" ;;
         menu_rotate_secret) echo "シークレット更新" ;;
         menu_uninstall) echo "アンインストール" ;;
@@ -608,8 +611,9 @@ t() {
         menu_press_enter) echo "Enterキーでメニューに戻ります..." ;;
         ask_oper_mode) echo "モードを選択してください:" ;;
         ask_rotate_mode) echo "シークレット更新モードを選択してください:" ;;
-        ask_new_mtg_image) echo "新しいMTGイメージdigestを入力（空欄=現状維持）: " ;;
-        ask_new_dd_image) echo "新しいDDイメージdigestを入力（空欄=現状維持）: " ;;
+        ask_new_mtg_image) echo "新しいMTGイメージdigestを入力（空欄=現状維持、auto=最新digest自動検出）: " ;;
+        ask_new_dd_image) echo "新しいDDイメージdigestを入力（空欄=現状維持、auto=最新digest自動検出）: " ;;
+        note_upgrade_scope) echo "この操作はイメージdigest更新とサービス再起動のみ行い、ドメイン・ポート・シークレットは変更しません。" ;;
         ask_new_secret) echo "新しいシークレットを入力（空欄=EE自動生成）: " ;;
         ask_front_for_auto_secret) echo "EE自動生成用front-domainを入力（空欄=現状維持）: " ;;
         ask_bind_ip_mode) echo "バインドIPを選択してください:" ;;
@@ -1920,13 +1924,71 @@ cmd_self_update() {
   echo "sudo bash ${script_dir}/install.sh"
 }
 
+upgrade_tracking_ref() {
+  local mode="$1"
+  local current_image="$2"
+  local repo=""
+  local tag=""
+
+  case "$mode" in
+    ee)
+      repo="nineseconds/mtg"
+      tag="2"
+      ;;
+    dd)
+      repo="telegrammessenger/proxy"
+      tag="latest"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  if is_valid_digest_image_ref "$current_image"; then
+    repo="${current_image%@*}"
+  fi
+
+  printf '%s:%s' "$repo" "$tag"
+}
+
+resolve_upgrade_image_arg() {
+  local mode="$1"
+  local user_input="$2"
+  local current_image="$3"
+  local normalized_input=""
+  local tracking_ref=""
+  local resolved_digest=""
+
+  normalized_input="${user_input//[[:space:]]/}"
+  if [[ -z "$normalized_input" ]]; then
+    printf '%s' "$current_image"
+    return 0
+  fi
+
+  if [[ "${normalized_input,,}" == "auto" ]]; then
+    tracking_ref="$(upgrade_tracking_ref "$mode" "$current_image")"
+    docker pull "$tracking_ref" >/dev/null
+    resolved_digest="$(docker image inspect "$tracking_ref" --format '{{index .RepoDigests 0}}' 2>/dev/null || true)"
+    if ! is_valid_digest_image_ref "$resolved_digest"; then
+      return 1
+    fi
+    printf '%s' "$resolved_digest"
+    return 0
+  fi
+
+  printf '%s' "$normalized_input"
+}
+
 cmd_upgrade() {
-  local mtg_new_image="$1"
-  local dd_new_image="$2"
+  local mtg_input="$1"
+  local dd_input="$2"
+  local mtg_new_image=""
+  local dd_new_image=""
   local current_mtg_image=""
   local current_dd_image=""
 
   echo
+  t note_upgrade_scope
   t step_backup
   create_backup "upgrade"
 
@@ -1938,7 +2000,13 @@ cmd_upgrade() {
     # shellcheck disable=SC1090
     source "$EE_ENV_FILE"
     current_mtg_image="${MTG_IMAGE:-}"
-    mtg_new_image="${mtg_new_image:-$current_mtg_image}"
+    if ! mtg_new_image="$(resolve_upgrade_image_arg ee "$mtg_input" "$current_mtg_image")"; then
+      printf '%s %s\n' "$(t err_invalid_mtg_image)" "${mtg_input:-auto}"
+      return 1
+    fi
+    if [[ "${mtg_input//[[:space:]]/}" =~ ^[Aa][Uu][Tt][Oo]$ ]]; then
+      printf '%s %s\n' "$(t note_using_digest)" "$mtg_new_image"
+    fi
     if ! is_valid_digest_image_ref "$mtg_new_image"; then
       printf '%s %s\n' "$(t err_invalid_mtg_image)" "$mtg_new_image"
       return 1
@@ -1958,7 +2026,13 @@ cmd_upgrade() {
     # shellcheck disable=SC1090
     source "$DD_ENV_FILE"
     current_dd_image="${DD_IMAGE:-}"
-    dd_new_image="${dd_new_image:-$current_dd_image}"
+    if ! dd_new_image="$(resolve_upgrade_image_arg dd "$dd_input" "$current_dd_image")"; then
+      printf '%s %s\n' "$(t err_invalid_dd_image)" "${dd_input:-auto}"
+      return 1
+    fi
+    if [[ "${dd_input//[[:space:]]/}" =~ ^[Aa][Uu][Tt][Oo]$ ]]; then
+      printf '%s %s\n' "$(t note_using_digest)" "$dd_new_image"
+    fi
     if ! is_valid_digest_image_ref "$dd_new_image"; then
       printf '%s %s\n' "$(t err_invalid_dd_image)" "$dd_new_image"
       return 1
@@ -2375,6 +2449,7 @@ interactive_menu() {
       4)
         mode="$(prompt_mode_all)"
         set_mode_flags "$mode" || continue
+        t note_upgrade_scope
         mtg_image_arg=""
         dd_image_arg=""
         if [[ "$DEPLOY_EE" -eq 1 ]]; then

@@ -49,6 +49,8 @@ sudo bash install.sh uninstall --mode all
 
 ```bash
 # upgrade image digest(s)
+sudo bash install.sh upgrade --mode ee --mtg-image auto
+sudo bash install.sh upgrade --mode dd --dd-image auto
 sudo bash install.sh upgrade --mode ee --mtg-image 'nineseconds/mtg@sha256:<digest>'
 sudo bash install.sh upgrade --mode dd --dd-image 'telegrammessenger/proxy@sha256:<digest>'
 
@@ -133,6 +135,8 @@ sudo bash install.sh uninstall --mode all
 
 ```bash
 # 升级镜像 digest
+sudo bash install.sh upgrade --mode ee --mtg-image auto
+sudo bash install.sh upgrade --mode dd --dd-image auto
 sudo bash install.sh upgrade --mode ee --mtg-image 'nineseconds/mtg@sha256:<digest>'
 sudo bash install.sh upgrade --mode dd --dd-image 'telegrammessenger/proxy@sha256:<digest>'
 
@@ -217,6 +221,8 @@ sudo bash install.sh uninstall --mode all
 
 ```bash
 # 이미지 digest 업그레이드
+sudo bash install.sh upgrade --mode ee --mtg-image auto
+sudo bash install.sh upgrade --mode dd --dd-image auto
 sudo bash install.sh upgrade --mode ee --mtg-image 'nineseconds/mtg@sha256:<digest>'
 sudo bash install.sh upgrade --mode dd --dd-image 'telegrammessenger/proxy@sha256:<digest>'
 
@@ -301,6 +307,8 @@ sudo bash install.sh uninstall --mode all
 
 ```bash
 # イメージ digest 更新
+sudo bash install.sh upgrade --mode ee --mtg-image auto
+sudo bash install.sh upgrade --mode dd --dd-image auto
 sudo bash install.sh upgrade --mode ee --mtg-image 'nineseconds/mtg@sha256:<digest>'
 sudo bash install.sh upgrade --mode dd --dd-image 'telegrammessenger/proxy@sha256:<digest>'
 
