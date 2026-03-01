@@ -198,6 +198,9 @@ t() {
         label_expected) echo "expected" ;;
         label_actual) echo "actual" ;;
         label_log) echo "log" ;;
+        label_secret) echo "Secret" ;;
+        label_import_link) echo "Import link" ;;
+        note_rotate_done) echo "Secret rotation applied and service restarted." ;;
         summary_images) echo "Images" ;;
         summary_mtg) echo "MTG" ;;
         summary_dd) echo "DD" ;;
@@ -362,6 +365,9 @@ t() {
         label_expected) echo "期望" ;;
         label_actual) echo "实际" ;;
         label_log) echo "日志" ;;
+        label_secret) echo "密钥" ;;
+        label_import_link) echo "导入链接" ;;
+        note_rotate_done) echo "密钥轮换已生效，服务已重启。" ;;
         summary_images) echo "镜像" ;;
         summary_mtg) echo "MTG" ;;
         summary_dd) echo "DD" ;;
@@ -526,6 +532,9 @@ t() {
         label_expected) echo "기대값" ;;
         label_actual) echo "실제값" ;;
         label_log) echo "로그" ;;
+        label_secret) echo "시크릿" ;;
+        label_import_link) echo "가져오기 링크" ;;
+        note_rotate_done) echo "시크릿 교체가 적용되었고 서비스가 재시작되었습니다." ;;
         summary_images) echo "이미지" ;;
         summary_mtg) echo "MTG" ;;
         summary_dd) echo "DD" ;;
@@ -690,6 +699,9 @@ t() {
         label_expected) echo "期待値" ;;
         label_actual) echo "実測値" ;;
         label_log) echo "ログ" ;;
+        label_secret) echo "シークレット" ;;
+        label_import_link) echo "インポートリンク" ;;
+        note_rotate_done) echo "シークレット更新を適用し、サービスを再起動しました。" ;;
         summary_images) echo "イメージ" ;;
         summary_mtg) echo "MTG" ;;
         summary_dd) echo "DD" ;;
@@ -2078,6 +2090,9 @@ cmd_rotate_secret() {
   local mode="$1"
   local input_secret="$2"
   local front_domain_arg="$3"
+  local rotate_title=""
+  local rotate_secret_out=""
+  local rotate_link=""
 
   echo
   t step_backup
@@ -2123,6 +2138,9 @@ EOF
       write_ee_systemd_unit
       systemd_reload
       systemctl restart "$EE_SERVICE_NAME"
+      rotate_title="$(t summary_ee_link)"
+      rotate_secret_out="$EE_SECRET"
+      rotate_link="tg://proxy?server=${EE_DOMAIN}&port=${EE_PORT}&secret=${EE_SECRET}"
       ;;
     dd)
       [[ -f "$DD_ENV_FILE" ]] || {
@@ -2147,12 +2165,25 @@ EOF
       write_dd_systemd_unit
       systemd_reload
       systemctl restart "$DD_SERVICE_NAME"
+      rotate_title="$(t summary_dd_link)"
+      rotate_secret_out="$DD_SECRET"
+      rotate_link="tg://proxy?server=${DD_DOMAIN}&port=${DD_PORT}&secret=${DD_SECRET}"
       ;;
     *)
       t err_rotate_mode_required
       return 1
       ;;
   esac
+
+  echo
+  t note_rotate_done
+  t note_secret
+  if [[ -n "$rotate_title" ]]; then
+    echo "${rotate_title} $(t label_secret): ${rotate_secret_out}"
+    echo "${rotate_title} $(t label_import_link): ${rotate_link}"
+  fi
+  set_mode_flags "$mode" || return 1
+  cmd_healthcheck
 }
 
 command_install() {
@@ -2515,10 +2546,7 @@ interactive_menu() {
         if [[ "$rotate_mode" == "ee" ]]; then
           read -rp "$(t ask_front_for_auto_secret)" rotate_front
         fi
-        if cmd_rotate_secret "$rotate_mode" "$rotate_secret" "$rotate_front"; then
-          set_mode_flags "$rotate_mode" || continue
-          cmd_healthcheck || true
-        fi
+        cmd_rotate_secret "$rotate_mode" "$rotate_secret" "$rotate_front" || true
         pause_menu
         ;;
       9)
@@ -2739,8 +2767,6 @@ main() {
         exit 1
       fi
       cmd_rotate_secret "$rotate_mode" "$rotate_secret" "$rotate_front"
-      set_mode_flags "$rotate_mode" || exit 1
-      cmd_healthcheck
       ;;
     -h | --help | help)
       usage
