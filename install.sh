@@ -125,7 +125,8 @@ t() {
         ask_new_mtg_image) echo "Enter new MTG image digest (blank=keep current, auto=latest digest): " ;;
         ask_new_dd_image) echo "Enter new DD image digest (blank=keep current, auto=latest digest): " ;;
         note_upgrade_scope) echo "This upgrades image digests and restarts services only; domains, ports, and secrets stay unchanged." ;;
-        ask_new_secret) echo "Enter new secret (blank=auto for EE): " ;;
+        ask_new_secret_ee) echo "Enter new EE secret (blank=auto-generate): " ;;
+        ask_new_secret_dd) echo "Enter new DD secret (blank=auto-generate): " ;;
         ask_front_for_auto_secret) echo "Enter front-domain for EE auto secret (blank=keep current): " ;;
         ask_bind_ip_mode) echo "Choose bind IP:" ;;
         opt_all_interfaces) echo "all interfaces, recommended" ;;
@@ -177,7 +178,7 @@ t() {
         note_legacy_detected) echo "legacy deployment detected: container is running, but env is missing" ;;
         note_legacy_migrate) echo "run migrate/install to bring this instance under script management" ;;
         ask_new_ee_secret_cli) echo "Enter new EE secret (hex). Leave empty to auto-generate: " ;;
-        ask_new_dd_secret_cli) echo "Enter new DD secret (32-hex or dd+32-hex): " ;;
+        ask_new_dd_secret_cli) echo "Enter new DD secret (32-hex or dd+32-hex, blank=auto-generate): " ;;
         note_attempt_restart_ee) echo "[ee] attempting restart..." ;;
         note_attempt_restart_dd) echo "[dd] attempting restart..." ;;
         hc_not_installed) echo "not installed (env missing)" ;;
@@ -288,7 +289,8 @@ t() {
         ask_new_mtg_image) echo "请输入新的 MTG 镜像 digest（留空=保持当前，auto=自动检测最新 digest）： " ;;
         ask_new_dd_image) echo "请输入新的 DD 镜像 digest（留空=保持当前，auto=自动检测最新 digest）： " ;;
         note_upgrade_scope) echo "此操作仅升级镜像 digest 并重启服务，不会修改域名、端口、密钥。" ;;
-        ask_new_secret) echo "请输入新 secret（留空=EE 自动生成）： " ;;
+        ask_new_secret_ee) echo "请输入新的 EE secret（留空=自动生成）： " ;;
+        ask_new_secret_dd) echo "请输入新的 DD secret（留空=自动生成）： " ;;
         ask_front_for_auto_secret) echo "请输入 EE 自动生成 secret 的 front-domain（留空=保持当前）： " ;;
         ask_bind_ip_mode) echo "请选择绑定 IP：" ;;
         opt_all_interfaces) echo "全部网卡，推荐" ;;
@@ -340,7 +342,7 @@ t() {
         note_legacy_detected) echo "发现旧部署：容器在运行，但 env 文件缺失" ;;
         note_legacy_migrate) echo "请运行 migrate/install 将该实例纳入脚本托管" ;;
         ask_new_ee_secret_cli) echo "请输入新的 EE secret（hex，留空=自动生成）： " ;;
-        ask_new_dd_secret_cli) echo "请输入新的 DD secret（32hex 或 dd+32hex）： " ;;
+        ask_new_dd_secret_cli) echo "请输入新的 DD secret（32hex 或 dd+32hex，留空=自动生成）： " ;;
         note_attempt_restart_ee) echo "[ee] 正在尝试重启..." ;;
         note_attempt_restart_dd) echo "[dd] 正在尝试重启..." ;;
         hc_not_installed) echo "未安装（缺少 env 文件）" ;;
@@ -451,7 +453,8 @@ t() {
         ask_new_mtg_image) echo "새 MTG 이미지 digest 입력 (빈값=현재 유지, auto=최신 digest 자동 감지): " ;;
         ask_new_dd_image) echo "새 DD 이미지 digest 입력 (빈값=현재 유지, auto=최신 digest 자동 감지): " ;;
         note_upgrade_scope) echo "이 작업은 이미지 digest 업데이트와 서비스 재시작만 수행하며, 도메인/포트/시크릿은 변경하지 않습니다." ;;
-        ask_new_secret) echo "새 시크릿 입력 (빈값=EE 자동 생성): " ;;
+        ask_new_secret_ee) echo "새 EE 시크릿 입력 (빈값=자동 생성): " ;;
+        ask_new_secret_dd) echo "새 DD 시크릿 입력 (빈값=자동 생성): " ;;
         ask_front_for_auto_secret) echo "EE 자동 시크릿용 front-domain 입력 (빈값=현재 유지): " ;;
         ask_bind_ip_mode) echo "바인드 IP를 선택하세요:" ;;
         opt_all_interfaces) echo "모든 인터페이스, 권장" ;;
@@ -503,7 +506,7 @@ t() {
         note_legacy_detected) echo "레거시 배포 감지: 컨테이너는 실행 중이지만 env 파일이 없습니다" ;;
         note_legacy_migrate) echo "migrate/install로 이 인스턴스를 스크립트 관리로 전환하세요" ;;
         ask_new_ee_secret_cli) echo "새 EE 시크릿 입력(hex, 빈값=자동 생성): " ;;
-        ask_new_dd_secret_cli) echo "새 DD 시크릿 입력(32hex 또는 dd+32hex): " ;;
+        ask_new_dd_secret_cli) echo "새 DD 시크릿 입력(32hex 또는 dd+32hex, 빈값=자동 생성): " ;;
         note_attempt_restart_ee) echo "[ee] 재시작 시도 중..." ;;
         note_attempt_restart_dd) echo "[dd] 재시작 시도 중..." ;;
         hc_not_installed) echo "설치되지 않음(env 파일 없음)" ;;
@@ -614,7 +617,8 @@ t() {
         ask_new_mtg_image) echo "新しいMTGイメージdigestを入力（空欄=現状維持、auto=最新digest自動検出）: " ;;
         ask_new_dd_image) echo "新しいDDイメージdigestを入力（空欄=現状維持、auto=最新digest自動検出）: " ;;
         note_upgrade_scope) echo "この操作はイメージdigest更新とサービス再起動のみ行い、ドメイン・ポート・シークレットは変更しません。" ;;
-        ask_new_secret) echo "新しいシークレットを入力（空欄=EE自動生成）: " ;;
+        ask_new_secret_ee) echo "新しいEEシークレットを入力（空欄=自動生成）: " ;;
+        ask_new_secret_dd) echo "新しいDDシークレットを入力（空欄=自動生成）: " ;;
         ask_front_for_auto_secret) echo "EE自動生成用front-domainを入力（空欄=現状維持）: " ;;
         ask_bind_ip_mode) echo "バインドIPを選択してください:" ;;
         opt_all_interfaces) echo "全インターフェース、推奨" ;;
@@ -666,7 +670,7 @@ t() {
         note_legacy_detected) echo "旧デプロイを検出：コンテナは稼働中ですが env ファイルがありません" ;;
         note_legacy_migrate) echo "migrate/install を実行して script 管理へ移行してください" ;;
         ask_new_ee_secret_cli) echo "新しいEEシークレットを入力（hex、空欄=自動生成）: " ;;
-        ask_new_dd_secret_cli) echo "新しいDDシークレットを入力（32hex または dd+32hex）: " ;;
+        ask_new_dd_secret_cli) echo "新しいDDシークレットを入力（32hex または dd+32hex、空欄=自動生成）: " ;;
         note_attempt_restart_ee) echo "[ee] 再起動を試行中..." ;;
         note_attempt_restart_dd) echo "[dd] 再起動を試行中..." ;;
         hc_not_installed) echo "未インストール（env ファイル不足）" ;;
@@ -1627,6 +1631,10 @@ check_mode_health() {
     port="${DD_PORT}"
     bind_ip="${DD_BIND_IP:-0.0.0.0}"
     expected_image="${DD_IMAGE:-}"
+    if ! normalize_dd_secret "${DD_BASE_SECRET:-${DD_SECRET:-}}"; then
+      printf '[%s] %s\n' "$mode" "$(t err_invalid_dd_secret)"
+      ok=1
+    fi
   fi
 
   service_restarts="$(systemctl show -p NRestarts --value "$service_name" 2>/dev/null || echo 0)"
@@ -2025,6 +2033,12 @@ cmd_upgrade() {
     }
     # shellcheck disable=SC1090
     source "$DD_ENV_FILE"
+    if ! normalize_dd_secret "${DD_BASE_SECRET:-${DD_SECRET:-}}"; then
+      t err_invalid_dd_secret
+      return 1
+    fi
+    upsert_env_key "$DD_ENV_FILE" "DD_BASE_SECRET" "$DD_BASE_SECRET"
+    upsert_env_key "$DD_ENV_FILE" "DD_SECRET" "$DD_SECRET"
     current_dd_image="${DD_IMAGE:-}"
     if ! dd_new_image="$(resolve_upgrade_image_arg dd "$dd_input" "$current_dd_image")"; then
       printf '%s %s\n' "$(t err_invalid_dd_image)" "${dd_input:-auto}"
@@ -2080,6 +2094,9 @@ cmd_rotate_secret() {
       if [[ -z "$input_secret" ]]; then
         read -rp "$(t ask_new_ee_secret_cli)" input_secret
       fi
+      if [[ "${input_secret,,}" == "auto" ]]; then
+        input_secret=""
+      fi
       if [[ -z "$input_secret" ]]; then
         local use_front=""
         use_front="${front_domain_arg:-${FRONT_DOMAIN:-}}"
@@ -2114,6 +2131,9 @@ EOF
       }
       if [[ -z "$input_secret" ]]; then
         read -rp "$(t ask_new_dd_secret_cli)" input_secret
+      fi
+      if [[ -z "$input_secret" || "${input_secret,,}" == "auto" ]]; then
+        input_secret="$(openssl rand -hex 16)"
       fi
       if ! normalize_dd_secret "$input_secret"; then
         t err_invalid_dd_secret
@@ -2482,7 +2502,15 @@ interactive_menu() {
         ;;
       8)
         rotate_mode="$(prompt_mode_rotate)"
-        read -rp "$(t ask_new_secret)" rotate_secret
+        if [[ "$rotate_mode" == "ee" ]]; then
+          read -rp "$(t ask_new_secret_ee)" rotate_secret
+        else
+          read -rp "$(t ask_new_secret_dd)" rotate_secret
+        fi
+        rotate_secret="${rotate_secret//[[:space:]]/}"
+        if [[ -z "$rotate_secret" ]]; then
+          rotate_secret="auto"
+        fi
         rotate_front=""
         if [[ "$rotate_mode" == "ee" ]]; then
           read -rp "$(t ask_front_for_auto_secret)" rotate_front
