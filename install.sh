@@ -1491,6 +1491,45 @@ docker_binding_port() {
   docker inspect -f "{{with index .HostConfig.PortBindings \"${container_port}\"}}{{(index . 0).HostPort}}{{end}}" "$container" 2>/dev/null || true
 }
 
+detect_legacy_running_container() {
+  local mode="$1"
+  local preferred_name=""
+  local image_re=""
+  local container_port=""
+  local candidate=""
+
+  case "$mode" in
+    ee)
+      preferred_name="$EE_CONTAINER_NAME"
+      image_re='(^|.*/)nineseconds/mtg(@sha256:|:)'
+      container_port="3128/tcp"
+      ;;
+    dd)
+      preferred_name="$DD_CONTAINER_NAME"
+      image_re='(^|.*/)telegrammessenger/proxy(@sha256:|:)'
+      container_port="443/tcp"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$preferred_name"; then
+    printf '%s' "$preferred_name"
+    return 0
+  fi
+
+  while read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    if [[ -n "$(docker_binding_port "$candidate" "$container_port")" ]]; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done < <(docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null | awk -v re="$image_re" '$2 ~ re {print $1}')
+
+  return 1
+}
+
 read_env_key() {
   local file="$1"
   local key="$2"
@@ -1529,6 +1568,7 @@ check_mode_health() {
   local running_image=""
   local actual_bind_ip=""
   local actual_bind_port=""
+  local legacy_container_name=""
 
   case "$mode" in
     ee)
@@ -1548,7 +1588,8 @@ check_mode_health() {
       ;;
   esac
 
-  if docker ps --format '{{.Names}}' | grep -qx "$container_name"; then
+  legacy_container_name="$(detect_legacy_running_container "$mode" || true)"
+  if [[ -n "$legacy_container_name" ]]; then
     mode_container_running=1
   fi
 
@@ -1718,6 +1759,8 @@ cmd_migrate() {
   local front_domain_arg="$3"
   local image_ref=""
   local migrated_any=0
+  local ee_legacy_container=""
+  local dd_legacy_container=""
   local detected_server_ip=""
   local existing_ee_domain=""
   local existing_dd_domain=""
@@ -1734,25 +1777,24 @@ cmd_migrate() {
   detected_server_ip="$(get_primary_ipv4)"
 
   if [[ "$DEPLOY_EE" -eq 1 ]]; then
-    if ! docker_container_exists "$EE_CONTAINER_NAME"; then
-      if [[ "$DEPLOY_DD" -eq 1 ]] && docker_container_exists "$DD_CONTAINER_NAME"; then
-        DEPLOY_EE=0
-      else
-        t err_legacy_container_missing
-        echo "$EE_CONTAINER_NAME"
-        return 1
-      fi
+    ee_legacy_container="$(detect_legacy_running_container ee || true)"
+  fi
+  if [[ "$DEPLOY_DD" -eq 1 ]]; then
+    dd_legacy_container="$(detect_legacy_running_container dd || true)"
+  fi
+
+  if [[ "$DEPLOY_EE" -eq 1 ]]; then
+    if [[ -z "$ee_legacy_container" ]]; then
+      t err_legacy_container_missing
+      echo "$EE_CONTAINER_NAME"
+      return 1
     fi
   fi
   if [[ "$DEPLOY_DD" -eq 1 ]]; then
-    if ! docker_container_exists "$DD_CONTAINER_NAME"; then
-      if [[ "$DEPLOY_EE" -eq 1 ]] && docker_container_exists "$EE_CONTAINER_NAME"; then
-        DEPLOY_DD=0
-      else
-        t err_legacy_container_missing
-        echo "$DD_CONTAINER_NAME"
-        return 1
-      fi
+    if [[ -z "$dd_legacy_container" ]]; then
+      t err_legacy_container_missing
+      echo "$DD_CONTAINER_NAME"
+      return 1
     fi
   fi
 
@@ -1762,17 +1804,12 @@ cmd_migrate() {
   fi
 
   if [[ "$DEPLOY_EE" -eq 1 ]]; then
-    if ! docker_container_exists "$EE_CONTAINER_NAME"; then
-      t err_legacy_container_missing
-      echo "$EE_CONTAINER_NAME"
-      return 1
-    fi
     existing_ee_domain="$(read_env_key "$EE_ENV_FILE" "EE_DOMAIN" || true)"
     EE_DOMAIN="${ee_domain_arg:-$existing_ee_domain}"
     existing_front_domain="$(read_env_key "$EE_ENV_FILE" "FRONT_DOMAIN" || true)"
     FRONT_DOMAIN="${front_domain_arg:-$existing_front_domain}"
-    EE_BIND_IP="$(docker_binding_ip "$EE_CONTAINER_NAME" "3128/tcp")"
-    EE_PORT="$(docker_binding_port "$EE_CONTAINER_NAME" "3128/tcp")"
+    EE_BIND_IP="$(docker_binding_ip "$ee_legacy_container" "3128/tcp")"
+    EE_PORT="$(docker_binding_port "$ee_legacy_container" "3128/tcp")"
     if [[ -z "$EE_PORT" ]]; then
       t err_migrate_port_missing
       return 1
@@ -1790,12 +1827,12 @@ cmd_migrate() {
       FRONT_DOMAIN="www.cloudflare.com"
       printf '%s %s\n' "$(t warn_front_domain_fallback)" "$FRONT_DOMAIN"
     fi
-    image_ref="$(docker inspect -f '{{.Config.Image}}' "$EE_CONTAINER_NAME" 2>/dev/null || true)"
+    image_ref="$(docker inspect -f '{{.Config.Image}}' "$ee_legacy_container" 2>/dev/null || true)"
     MTG_IMAGE="$(normalize_image_to_digest ee "$image_ref")"
     printf '%s %s\n' "$(t note_using_digest)" "$MTG_IMAGE"
     EE_SECRET="$(extract_ee_secret_from_config || true)"
     if [[ -z "$EE_SECRET" ]]; then
-      EE_SECRET="$(extract_ee_secret_from_container "$EE_CONTAINER_NAME" || true)"
+      EE_SECRET="$(extract_ee_secret_from_container "$ee_legacy_container" || true)"
     fi
     if [[ -z "$EE_SECRET" ]]; then
       t err_ee_secret_autodetect_fail
@@ -1815,8 +1852,8 @@ EOF
   if [[ "$DEPLOY_DD" -eq 1 ]]; then
     existing_dd_domain="$(read_env_key "$DD_ENV_FILE" "DD_DOMAIN" || true)"
     DD_DOMAIN="${dd_domain_arg:-$existing_dd_domain}"
-    DD_BIND_IP="$(docker_binding_ip "$DD_CONTAINER_NAME" "443/tcp")"
-    DD_PORT="$(docker_binding_port "$DD_CONTAINER_NAME" "443/tcp")"
+    DD_BIND_IP="$(docker_binding_ip "$dd_legacy_container" "443/tcp")"
+    DD_PORT="$(docker_binding_port "$dd_legacy_container" "443/tcp")"
     if [[ -z "$DD_PORT" ]]; then
       t err_migrate_port_missing
       return 1
@@ -1830,11 +1867,11 @@ EOF
       DD_DOMAIN="$fallback_host"
       printf '%s %s\n' "$(t warn_dd_domain_fallback)" "$DD_DOMAIN"
     fi
-    image_ref="$(docker inspect -f '{{.Config.Image}}' "$DD_CONTAINER_NAME" 2>/dev/null || true)"
+    image_ref="$(docker inspect -f '{{.Config.Image}}' "$dd_legacy_container" 2>/dev/null || true)"
     DD_IMAGE="$(normalize_image_to_digest dd "$image_ref")"
     printf '%s %s\n' "$(t note_using_digest)" "$DD_IMAGE"
 
-    DD_BASE_SECRET="$(docker_env_value "$DD_CONTAINER_NAME" "SECRET")"
+    DD_BASE_SECRET="$(docker_env_value "$dd_legacy_container" "SECRET")"
     if ! normalize_dd_secret "$DD_BASE_SECRET"; then
       t err_invalid_dd_secret
       return 1
@@ -1847,6 +1884,13 @@ EOF
   if [[ "$migrated_any" -eq 0 ]]; then
     t err_migrate_no_legacy
     return 1
+  fi
+
+  if [[ "$DEPLOY_EE" -eq 1 ]] && [[ -n "$ee_legacy_container" ]] && [[ "$ee_legacy_container" != "$EE_CONTAINER_NAME" ]]; then
+    docker rm -f "$ee_legacy_container" >/dev/null 2>&1 || true
+  fi
+  if [[ "$DEPLOY_DD" -eq 1 ]] && [[ -n "$dd_legacy_container" ]] && [[ "$dd_legacy_container" != "$DD_CONTAINER_NAME" ]]; then
+    docker rm -f "$dd_legacy_container" >/dev/null 2>&1 || true
   fi
 
   systemd_reload
