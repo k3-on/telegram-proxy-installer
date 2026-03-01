@@ -209,6 +209,10 @@ t() {
         usage_rollback) echo "rollback restores config and units from latest/specified backup." ;;
         usage_install) echo "install command starts interactive install flow." ;;
         usage_rotate_dd) echo "rotate-secret for DD accepts 32-hex or dd+32-hex." ;;
+        warn_ee_domain_fallback) echo "EE domain not detected. Using server IP:" ;;
+        warn_dd_domain_fallback) echo "DD domain not detected. Using server IP:" ;;
+        warn_front_domain_fallback) echo "Fronting domain not detected. Using default:" ;;
+        err_ee_secret_autodetect_fail) echo "Cannot auto-detect EE secret from legacy config/container." ;;
       esac
       ;;
     zh)
@@ -367,6 +371,10 @@ t() {
         usage_rollback) echo "rollback：从最新或指定备份恢复配置与 unit。" ;;
         usage_install) echo "install 命令：直接进入交互式安装流程。" ;;
         usage_rotate_dd) echo "DD 的 rotate-secret 支持 32hex 或 dd+32hex。" ;;
+        warn_ee_domain_fallback) echo "未检测到 EE 域名，改用服务器 IP：" ;;
+        warn_dd_domain_fallback) echo "未检测到 DD 域名，改用服务器 IP：" ;;
+        warn_front_domain_fallback) echo "未检测到 fronting 域名，改用默认值：" ;;
+        err_ee_secret_autodetect_fail) echo "无法从旧配置/容器自动识别 EE secret。" ;;
       esac
       ;;
     ko)
@@ -525,6 +533,10 @@ t() {
         usage_rollback) echo "rollback: 최신/지정 백업에서 설정과 unit을 복원합니다." ;;
         usage_install) echo "install 명령: 대화형 설치 흐름을 바로 시작합니다." ;;
         usage_rotate_dd) echo "DD rotate-secret는 32-hex 또는 dd+32-hex를 지원합니다." ;;
+        warn_ee_domain_fallback) echo "EE 도메인을 감지하지 못해 서버 IP를 사용합니다:" ;;
+        warn_dd_domain_fallback) echo "DD 도메인을 감지하지 못해 서버 IP를 사용합니다:" ;;
+        warn_front_domain_fallback) echo "프론팅 도메인을 감지하지 못해 기본값을 사용합니다:" ;;
+        err_ee_secret_autodetect_fail) echo "레거시 설정/컨테이너에서 EE 시크릿 자동 감지에 실패했습니다." ;;
       esac
       ;;
     ja)
@@ -683,6 +695,10 @@ t() {
         usage_rollback) echo "rollback: 最新/指定バックアップから設定と unit を復元します。" ;;
         usage_install) echo "install コマンド: 対話式インストールを直接開始します。" ;;
         usage_rotate_dd) echo "DD の rotate-secret は 32-hex または dd+32-hex を受け付けます。" ;;
+        warn_ee_domain_fallback) echo "EE ドメインを検出できないため、サーバー IP を使用します:" ;;
+        warn_dd_domain_fallback) echo "DD ドメインを検出できないため、サーバー IP を使用します:" ;;
+        warn_front_domain_fallback) echo "fronting ドメインを検出できないため、既定値を使用します:" ;;
+        err_ee_secret_autodetect_fail) echo "旧設定/コンテナから EE シークレットを自動検出できません。" ;;
       esac
       ;;
   esac
@@ -1475,9 +1491,25 @@ docker_binding_port() {
   docker inspect -f "{{with index .HostConfig.PortBindings \"${container_port}\"}}{{(index . 0).HostPort}}{{end}}" "$container" 2>/dev/null || true
 }
 
+read_env_key() {
+  local file="$1"
+  local key="$2"
+  [[ -f "$file" ]] || return 1
+  awk -F= -v k="$key" '$1 == k {sub($1"=","",$0); print; exit}' "$file"
+}
+
 extract_ee_secret_from_config() {
   if [[ -f /opt/mtg/config.toml ]]; then
     sed -n 's/^[[:space:]]*secret[[:space:]]*=[[:space:]]*"\([A-Za-z0-9]\+\)".*/\1/p' /opt/mtg/config.toml | head -n1
+  fi
+}
+
+extract_ee_secret_from_container() {
+  local container="$1"
+  local config_src=""
+  config_src="$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/config.toml"}}{{println .Source}}{{end}}{{end}}' "$container" 2>/dev/null | head -n1 || true)"
+  if [[ -n "$config_src" && -f "$config_src" ]]; then
+    sed -n 's/^[[:space:]]*secret[[:space:]]*=[[:space:]]*"\([A-Za-z0-9]\+\)".*/\1/p' "$config_src" | head -n1
   fi
 }
 
@@ -1684,9 +1716,13 @@ cmd_migrate() {
   local ee_domain_arg="$1"
   local dd_domain_arg="$2"
   local front_domain_arg="$3"
-  local ee_secret_input=""
   local image_ref=""
   local migrated_any=0
+  local detected_server_ip=""
+  local existing_ee_domain=""
+  local existing_dd_domain=""
+  local existing_front_domain=""
+  local fallback_host=""
 
   echo
   t step_migrate
@@ -1695,6 +1731,7 @@ cmd_migrate() {
   ensure_config_dir
   mkdir -p /opt/mtg
   chmod 700 /opt/mtg
+  detected_server_ip="$(get_primary_ipv4)"
 
   if [[ "$DEPLOY_EE" -eq 1 ]]; then
     if ! docker_container_exists "$EE_CONTAINER_NAME"; then
@@ -1730,28 +1767,38 @@ cmd_migrate() {
       echo "$EE_CONTAINER_NAME"
       return 1
     fi
-    EE_DOMAIN="${ee_domain_arg:-}"
-    if [[ -z "$EE_DOMAIN" ]]; then
-      ask_domain ask_ee_domain EE_DOMAIN
-    fi
-    FRONT_DOMAIN="${front_domain_arg:-www.cloudflare.com}"
+    existing_ee_domain="$(read_env_key "$EE_ENV_FILE" "EE_DOMAIN" || true)"
+    EE_DOMAIN="${ee_domain_arg:-$existing_ee_domain}"
+    existing_front_domain="$(read_env_key "$EE_ENV_FILE" "FRONT_DOMAIN" || true)"
+    FRONT_DOMAIN="${front_domain_arg:-$existing_front_domain}"
     EE_BIND_IP="$(docker_binding_ip "$EE_CONTAINER_NAME" "3128/tcp")"
     EE_PORT="$(docker_binding_port "$EE_CONTAINER_NAME" "3128/tcp")"
     if [[ -z "$EE_PORT" ]]; then
       t err_migrate_port_missing
       return 1
     fi
+    fallback_host="${detected_server_ip:-$EE_BIND_IP}"
+    if [[ -z "$fallback_host" || "$fallback_host" == "0.0.0.0" ]]; then
+      fallback_host="$(hostname -I 2>/dev/null | awk '{print $1}')"
+    fi
+    fallback_host="${fallback_host:-127.0.0.1}"
+    if [[ -z "$EE_DOMAIN" ]]; then
+      EE_DOMAIN="$fallback_host"
+      printf '%s %s\n' "$(t warn_ee_domain_fallback)" "$EE_DOMAIN"
+    fi
+    if [[ -z "$FRONT_DOMAIN" ]]; then
+      FRONT_DOMAIN="www.cloudflare.com"
+      printf '%s %s\n' "$(t warn_front_domain_fallback)" "$FRONT_DOMAIN"
+    fi
     image_ref="$(docker inspect -f '{{.Config.Image}}' "$EE_CONTAINER_NAME" 2>/dev/null || true)"
     MTG_IMAGE="$(normalize_image_to_digest ee "$image_ref")"
     printf '%s %s\n' "$(t note_using_digest)" "$MTG_IMAGE"
     EE_SECRET="$(extract_ee_secret_from_config || true)"
     if [[ -z "$EE_SECRET" ]]; then
-      read -rp "$(t ask_existing_ee_secret)" ee_secret_input
-      ee_secret_input="${ee_secret_input// /}"
-      EE_SECRET="$ee_secret_input"
+      EE_SECRET="$(extract_ee_secret_from_container "$EE_CONTAINER_NAME" || true)"
     fi
     if [[ -z "$EE_SECRET" ]]; then
-      t err_ee_secret_required
+      t err_ee_secret_autodetect_fail
       return 1
     fi
     umask 077
@@ -1766,15 +1813,22 @@ EOF
   fi
 
   if [[ "$DEPLOY_DD" -eq 1 ]]; then
-    DD_DOMAIN="${dd_domain_arg:-}"
-    if [[ -z "$DD_DOMAIN" ]]; then
-      ask_domain ask_dd_domain DD_DOMAIN
-    fi
+    existing_dd_domain="$(read_env_key "$DD_ENV_FILE" "DD_DOMAIN" || true)"
+    DD_DOMAIN="${dd_domain_arg:-$existing_dd_domain}"
     DD_BIND_IP="$(docker_binding_ip "$DD_CONTAINER_NAME" "443/tcp")"
     DD_PORT="$(docker_binding_port "$DD_CONTAINER_NAME" "443/tcp")"
     if [[ -z "$DD_PORT" ]]; then
       t err_migrate_port_missing
       return 1
+    fi
+    fallback_host="${detected_server_ip:-$DD_BIND_IP}"
+    if [[ -z "$fallback_host" || "$fallback_host" == "0.0.0.0" ]]; then
+      fallback_host="$(hostname -I 2>/dev/null | awk '{print $1}')"
+    fi
+    fallback_host="${fallback_host:-127.0.0.1}"
+    if [[ -z "$DD_DOMAIN" ]]; then
+      DD_DOMAIN="$fallback_host"
+      printf '%s %s\n' "$(t warn_dd_domain_fallback)" "$DD_DOMAIN"
     fi
     image_ref="$(docker inspect -f '{{.Config.Image}}' "$DD_CONTAINER_NAME" 2>/dev/null || true)"
     DD_IMAGE="$(normalize_image_to_digest dd "$image_ref")"
@@ -2233,9 +2287,6 @@ interactive_menu() {
   local mode=""
   local mtg_image_arg=""
   local dd_image_arg=""
-  local migrate_ee_domain=""
-  local migrate_dd_domain=""
-  local migrate_front_domain=""
   local backup_id=""
   local rotate_mode=""
   local rotate_secret=""
@@ -2300,18 +2351,7 @@ interactive_menu() {
       6)
         mode="$(prompt_mode_all)"
         set_mode_flags "$mode" || continue
-        migrate_ee_domain=""
-        migrate_dd_domain=""
-        migrate_front_domain=""
-        if [[ "$DEPLOY_EE" -eq 1 ]]; then
-          ask_domain ask_ee_domain migrate_ee_domain
-          ask_front_domain_with_options
-          migrate_front_domain="$FRONT_DOMAIN"
-        fi
-        if [[ "$DEPLOY_DD" -eq 1 ]]; then
-          ask_domain ask_dd_domain migrate_dd_domain
-        fi
-        cmd_migrate "$migrate_ee_domain" "$migrate_dd_domain" "$migrate_front_domain"
+        cmd_migrate "" "" ""
         pause_menu
         ;;
       7)

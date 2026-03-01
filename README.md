@@ -52,7 +52,7 @@ sudo bash install.sh uninstall --mode all
 sudo bash install.sh upgrade --mode ee --mtg-image 'nineseconds/mtg@sha256:<digest>'
 sudo bash install.sh upgrade --mode dd --dd-image 'telegrammessenger/proxy@sha256:<digest>'
 
-# migrate legacy running containers into script-managed services
+# migrate legacy running containers into script-managed services (auto-detect config)
 sudo bash install.sh migrate --mode all
 
 # rollback (latest backup by default)
@@ -136,7 +136,7 @@ sudo bash install.sh uninstall --mode all
 sudo bash install.sh upgrade --mode ee --mtg-image 'nineseconds/mtg@sha256:<digest>'
 sudo bash install.sh upgrade --mode dd --dd-image 'telegrammessenger/proxy@sha256:<digest>'
 
-# 迁移旧版正在运行的容器到脚本托管
+# 迁移旧版正在运行的容器到脚本托管（自动识别配置）
 sudo bash install.sh migrate --mode all
 
 # 回滚（默认最新备份）
@@ -220,7 +220,7 @@ sudo bash install.sh uninstall --mode all
 sudo bash install.sh upgrade --mode ee --mtg-image 'nineseconds/mtg@sha256:<digest>'
 sudo bash install.sh upgrade --mode dd --dd-image 'telegrammessenger/proxy@sha256:<digest>'
 
-# 레거시 실행 컨테이너를 스크립트 관리로 마이그레이션
+# 레거시 실행 컨테이너를 스크립트 관리로 마이그레이션 (설정 자동 감지)
 sudo bash install.sh migrate --mode all
 
 # 롤백 (기본: 최신 백업)
@@ -304,7 +304,7 @@ sudo bash install.sh uninstall --mode all
 sudo bash install.sh upgrade --mode ee --mtg-image 'nineseconds/mtg@sha256:<digest>'
 sudo bash install.sh upgrade --mode dd --dd-image 'telegrammessenger/proxy@sha256:<digest>'
 
-# 稼働中の旧コンテナを script 管理に移行
+# 稼働中の旧コンテナを script 管理に移行（設定を自動検出）
 sudo bash install.sh migrate --mode all
 
 # ロールバック（既定: 最新バックアップ）
