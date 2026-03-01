@@ -27,7 +27,7 @@ One-click interactive installer for Telegram MTProto proxy on Ubuntu 22.04.
 
 ### Quick Start
 ```bash
-git -C ~/telegram-proxy-20260226 pull || git clone https://github.com/k3-on/telegram-proxy-20260226.git ~/telegram-proxy-20260226; sudo bash ~/telegram-proxy-20260226/install.sh
+git -C ~/telegram-proxy-installer pull || git clone https://github.com/k3-on/telegram-proxy-installer.git ~/telegram-proxy-installer; sudo bash ~/telegram-proxy-installer/install.sh
 ```
 
 ### Common Operations
@@ -111,7 +111,7 @@ docker image inspect telegrammessenger/proxy:latest --format '{{index .RepoDiges
 
 ### 快速开始
 ```bash
-git -C ~/telegram-proxy-20260226 pull || git clone https://github.com/k3-on/telegram-proxy-20260226.git ~/telegram-proxy-20260226; sudo bash ~/telegram-proxy-20260226/install.sh
+git -C ~/telegram-proxy-installer pull || git clone https://github.com/k3-on/telegram-proxy-installer.git ~/telegram-proxy-installer; sudo bash ~/telegram-proxy-installer/install.sh
 ```
 
 ### 常用命令
@@ -195,7 +195,7 @@ docker image inspect telegrammessenger/proxy:latest --format '{{index .RepoDiges
 
 ### 빠른 시작
 ```bash
-git -C ~/telegram-proxy-20260226 pull || git clone https://github.com/k3-on/telegram-proxy-20260226.git ~/telegram-proxy-20260226; sudo bash ~/telegram-proxy-20260226/install.sh
+git -C ~/telegram-proxy-installer pull || git clone https://github.com/k3-on/telegram-proxy-installer.git ~/telegram-proxy-installer; sudo bash ~/telegram-proxy-installer/install.sh
 ```
 
 ### 기본 명령
@@ -279,7 +279,7 @@ docker image inspect telegrammessenger/proxy:latest --format '{{index .RepoDiges
 
 ### クイックスタート
 ```bash
-git -C ~/telegram-proxy-20260226 pull || git clone https://github.com/k3-on/telegram-proxy-20260226.git ~/telegram-proxy-20260226; sudo bash ~/telegram-proxy-20260226/install.sh
+git -C ~/telegram-proxy-installer pull || git clone https://github.com/k3-on/telegram-proxy-installer.git ~/telegram-proxy-installer; sudo bash ~/telegram-proxy-installer/install.sh
 ```
 
 ### 基本コマンド
