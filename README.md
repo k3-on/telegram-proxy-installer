@@ -30,6 +30,22 @@ One-click interactive installer for Telegram MTProto proxy on Ubuntu 22.04.
 git -C ~/telegram-proxy-installer pull || git clone https://github.com/k3-on/telegram-proxy-installer.git ~/telegram-proxy-installer; sudo bash ~/telegram-proxy-installer/install.sh
 ```
 
+### Connect to Your VPS by IP
+1. Find the public IPv4 address of your VPS in your cloud provider panel.
+2. Open a local terminal and connect over SSH:
+```bash
+ssh root@<your_vps_ip>
+```
+3. If your server uses another default user, replace `root` with that user name, for example:
+```bash
+ssh ubuntu@<your_vps_ip>
+```
+4. If this is your first connection, type `yes` when SSH asks whether to continue.
+5. If your VPS requires an SSH key file, use:
+```bash
+ssh -i ~/.ssh/<your_key_file> root@<your_vps_ip>
+```
+
 ### Common Operations
 - `sudo bash install.sh`: open interactive menu (install/manage).
 - `healthcheck --mode all`: check EE/DD service, container, and port health.
@@ -114,6 +130,22 @@ docker image inspect telegrammessenger/proxy:latest --format '{{index .RepoDiges
 ### 快速开始
 ```bash
 git -C ~/telegram-proxy-installer pull || git clone https://github.com/k3-on/telegram-proxy-installer.git ~/telegram-proxy-installer; sudo bash ~/telegram-proxy-installer/install.sh
+```
+
+### 通过 IP 地址连接 VPS
+1. 在云服务商控制台找到 VPS 的公网 IPv4 地址。
+2. 在本地终端执行 SSH 连接：
+```bash
+ssh root@<你的VPS_IP>
+```
+3. 如果服务器默认用户不是 `root`，把它替换成实际用户名，例如：
+```bash
+ssh ubuntu@<你的VPS_IP>
+```
+4. 首次连接时，SSH 会询问是否继续，输入 `yes` 即可。
+5. 如果你的 VPS 需要指定私钥文件，使用：
+```bash
+ssh -i ~/.ssh/<你的私钥文件> root@<你的VPS_IP>
 ```
 
 ### 常用命令
@@ -202,6 +234,22 @@ docker image inspect telegrammessenger/proxy:latest --format '{{index .RepoDiges
 git -C ~/telegram-proxy-installer pull || git clone https://github.com/k3-on/telegram-proxy-installer.git ~/telegram-proxy-installer; sudo bash ~/telegram-proxy-installer/install.sh
 ```
 
+### IP 주소로 VPS 접속하기
+1. 클라우드 제공업체 콘솔에서 VPS의 공인 IPv4 주소를 확인합니다.
+2. 로컬 터미널에서 SSH로 접속합니다:
+```bash
+ssh root@<your_vps_ip>
+```
+3. 기본 사용자가 `root`가 아니라면 실제 사용자명으로 바꿉니다. 예:
+```bash
+ssh ubuntu@<your_vps_ip>
+```
+4. 처음 접속하는 경우 SSH 확인 메시지가 나오면 `yes`를 입력합니다.
+5. SSH 키 파일을 지정해야 한다면 다음과 같이 접속합니다:
+```bash
+ssh -i ~/.ssh/<your_key_file> root@<your_vps_ip>
+```
+
 ### 기본 명령
 - `sudo bash install.sh`: 대화형 메인 메뉴를 열어 설치/관리를 진행합니다.
 - `healthcheck --mode all`: EE/DD 서비스, 컨테이너, 포트 상태를 점검합니다.
@@ -286,6 +334,22 @@ docker image inspect telegrammessenger/proxy:latest --format '{{index .RepoDiges
 ### クイックスタート
 ```bash
 git -C ~/telegram-proxy-installer pull || git clone https://github.com/k3-on/telegram-proxy-installer.git ~/telegram-proxy-installer; sudo bash ~/telegram-proxy-installer/install.sh
+```
+
+### IPアドレスでVPSに接続する
+1. クラウド事業者の管理画面で VPS のグローバル IPv4 アドレスを確認します。
+2. ローカル端末から SSH で接続します。
+```bash
+ssh root@<your_vps_ip>
+```
+3. 既定ユーザーが `root` でない場合は実際のユーザー名に置き換えます。例:
+```bash
+ssh ubuntu@<your_vps_ip>
+```
+4. 初回接続時に SSH の確認が表示されたら `yes` を入力します。
+5. 秘密鍵ファイルの指定が必要な場合:
+```bash
+ssh -i ~/.ssh/<your_key_file> root@<your_vps_ip>
 ```
 
 ### 基本コマンド
