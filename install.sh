@@ -116,6 +116,7 @@ t() {
         menu_upgrade) echo "upgrade images (EE/DD)" ;;
         menu_self_update) echo "self-update" ;;
         menu_rotate_secret) echo "rotate-secret" ;;
+        menu_region_diag) echo "regional blocking diagnosis (heuristic)" ;;
         menu_uninstall) echo "uninstall" ;;
         menu_help) echo "help" ;;
         menu_exit) echo "exit" ;;
@@ -145,6 +146,7 @@ t() {
         step_migrate) echo "Step: Migrating legacy running containers into script-managed systemd services." ;;
         step_backup) echo "Step: Creating backup before change." ;;
         step_rollback) echo "Step: Rolling back from backup." ;;
+        step_region_diag) echo "Step: Running heuristic regional blocking diagnosis." ;;
         ask_backup_id) echo "Enter backup ID (blank = latest): " ;;
         note_backup_saved) echo "Backup saved:" ;;
         note_backup_latest) echo "Using latest backup:" ;;
@@ -214,10 +216,29 @@ t() {
         usage_rollback) echo "rollback restores config and units from latest/specified backup." ;;
         usage_install) echo "install command starts interactive install flow." ;;
         usage_rotate_dd) echo "rotate-secret for DD accepts 32-hex or dd+32-hex." ;;
+        usage_region_diag) echo "regional-diagnose runs a local heuristic check; exact country confirmation still needs external probes." ;;
         warn_ee_domain_fallback) echo "EE domain not detected. Using server IP:" ;;
         warn_dd_domain_fallback) echo "DD domain not detected. Using server IP:" ;;
         warn_front_domain_fallback) echo "Fronting domain not detected. Using default:" ;;
         err_ee_secret_autodetect_fail) echo "Cannot auto-detect EE secret from legacy config/container." ;;
+        diag_scope_note) echo "This is a local heuristic only. It can suggest likely DNS/fronting/IP-port issues, but it cannot prove which countries are blocking you." ;;
+        diag_no_managed_service) echo "No script-managed EE/DD service is installed yet." ;;
+        diag_server_ip) echo "Detected server IPv4" ;;
+        diag_entry_domain) echo "Entry domain" ;;
+        diag_front_domain) echo "Fronting domain" ;;
+        diag_bind) echo "Bind target" ;;
+        diag_public_dns) echo "Public DNS resolver view" ;;
+        diag_resolver_match) echo "includes server IPv4:" ;;
+        diag_resolver_missing) echo "has no A record." ;;
+        diag_resolver_mismatch) echo "does not include server IPv4:" ;;
+        diag_front_tls_ok) echo "Fronting TLS handshake succeeded from this VPS." ;;
+        diag_front_tls_fail) echo "Fronting TLS handshake failed from this VPS." ;;
+        diag_local_issue_first) echo "Local service/config issues were detected first. Fix those before drawing regional blocking conclusions." ;;
+        diag_likely_dns_issue) echo "DNS/domain inconsistency was detected. This looks more like a domain/propagation issue than a country-specific block." ;;
+        diag_likely_ee_front_issue) echo "EE fronting checks failed locally. EE front-domain or EE secret/front pairing is more suspicious than regional blocking." ;;
+        diag_likely_region_block) echo "No obvious local service or DNS issue was found. If failures happen only in some countries, IP/port/protocol blocking is more likely." ;;
+        diag_country_probe_needed) echo "Exact country or ISP confirmation still requires external probes or user-side tests from those networks." ;;
+        diag_tool_missing) echo "Required tool is missing" ;;
       esac
       ;;
     zh)
@@ -283,6 +304,7 @@ t() {
         menu_upgrade) echo "升级镜像（EE/DD）" ;;
         menu_self_update) echo "脚本自更新" ;;
         menu_rotate_secret) echo "轮换密钥" ;;
+        menu_region_diag) echo "地区封锁诊断（推测）" ;;
         menu_uninstall) echo "卸载" ;;
         menu_help) echo "帮助" ;;
         menu_exit) echo "退出" ;;
@@ -312,6 +334,7 @@ t() {
         step_migrate) echo "步骤：将正在运行的旧容器迁移为脚本托管的 systemd 服务。" ;;
         step_backup) echo "步骤：变更前创建备份。" ;;
         step_rollback) echo "步骤：从备份执行回滚。" ;;
+        step_region_diag) echo "步骤：执行地区封锁启发式诊断。" ;;
         ask_backup_id) echo "请输入备份 ID（留空=最新）： " ;;
         note_backup_saved) echo "备份已保存：" ;;
         note_backup_latest) echo "使用最新备份：" ;;
@@ -381,10 +404,29 @@ t() {
         usage_rollback) echo "rollback：从最新或指定备份恢复配置与 unit。" ;;
         usage_install) echo "install 命令：直接进入交互式安装流程。" ;;
         usage_rotate_dd) echo "DD 的 rotate-secret 支持 32hex 或 dd+32hex。" ;;
+        usage_region_diag) echo "regional-diagnose：执行本地启发式诊断；若要精确确认国家/运营商，仍需外部探针。" ;;
         warn_ee_domain_fallback) echo "未检测到 EE 域名，改用服务器 IP：" ;;
         warn_dd_domain_fallback) echo "未检测到 DD 域名，改用服务器 IP：" ;;
         warn_front_domain_fallback) echo "未检测到 fronting 域名，改用默认值：" ;;
         err_ee_secret_autodetect_fail) echo "无法从旧配置/容器自动识别 EE secret。" ;;
+        diag_scope_note) echo "这只是本地启发式诊断。它可以提示更像是 DNS/fronting/IP/端口问题，但不能证明到底是哪些国家在屏蔽你。" ;;
+        diag_no_managed_service) echo "当前还没有脚本托管的 EE/DD 服务。" ;;
+        diag_server_ip) echo "检测到的服务器 IPv4" ;;
+        diag_entry_domain) echo "入口域名" ;;
+        diag_front_domain) echo "Fronting 域名" ;;
+        diag_bind) echo "绑定目标" ;;
+        diag_public_dns) echo "公共 DNS 解析视角" ;;
+        diag_resolver_match) echo "包含本机 IPv4：" ;;
+        diag_resolver_missing) echo "没有 A 记录。" ;;
+        diag_resolver_mismatch) echo "未包含本机 IPv4：" ;;
+        diag_front_tls_ok) echo "从本 VPS 到 fronting 域名的 TLS 握手正常。" ;;
+        diag_front_tls_fail) echo "从本 VPS 到 fronting 域名的 TLS 握手失败。" ;;
+        diag_local_issue_first) echo "首先检测到了本地服务/配置问题。应先修复这些问题，再讨论地区性屏蔽。" ;;
+        diag_likely_dns_issue) echo "检测到了 DNS/域名不一致，更像是域名解析或传播问题，而不是国家级屏蔽。" ;;
+        diag_likely_ee_front_issue) echo "EE 的 fronting 检查在本地失败。相比地区性屏蔽，更应优先怀疑 front-domain 或 EE secret/front 配对。" ;;
+        diag_likely_region_block) echo "未发现明显的本地服务或 DNS 问题。如果只有部分国家失败，更像是 IP/端口/协议层面的地区性拦截。" ;;
+        diag_country_probe_needed) echo "若要精确确认到国家或运营商，仍然需要外部探针或当地用户侧测试。" ;;
+        diag_tool_missing) echo "缺少所需工具" ;;
       esac
       ;;
     ko)
@@ -450,6 +492,7 @@ t() {
         menu_upgrade) echo "이미지 업그레이드(EE/DD)" ;;
         menu_self_update) echo "스크립트 자체 업데이트" ;;
         menu_rotate_secret) echo "시크릿 교체" ;;
+        menu_region_diag) echo "지역 차단 진단(추정)" ;;
         menu_uninstall) echo "제거" ;;
         menu_help) echo "도움말" ;;
         menu_exit) echo "종료" ;;
@@ -479,6 +522,7 @@ t() {
         step_migrate) echo "단계: 실행 중인 레거시 컨테이너를 systemd 관리 서비스로 마이그레이션." ;;
         step_backup) echo "단계: 변경 전 백업 생성." ;;
         step_rollback) echo "단계: 백업에서 롤백 수행." ;;
+        step_region_diag) echo "단계: 지역 차단 휴리스틱 진단 실행." ;;
         ask_backup_id) echo "백업 ID 입력 (빈값=최신): " ;;
         note_backup_saved) echo "백업 저장됨:" ;;
         note_backup_latest) echo "최신 백업 사용:" ;;
@@ -548,10 +592,29 @@ t() {
         usage_rollback) echo "rollback: 최신/지정 백업에서 설정과 unit을 복원합니다." ;;
         usage_install) echo "install 명령: 대화형 설치 흐름을 바로 시작합니다." ;;
         usage_rotate_dd) echo "DD rotate-secret는 32-hex 또는 dd+32-hex를 지원합니다." ;;
+        usage_region_diag) echo "regional-diagnose는 로컬 휴리스틱 점검을 수행합니다. 정확한 국가/ISP 확인에는 외부 프로브가 필요합니다." ;;
         warn_ee_domain_fallback) echo "EE 도메인을 감지하지 못해 서버 IP를 사용합니다:" ;;
         warn_dd_domain_fallback) echo "DD 도메인을 감지하지 못해 서버 IP를 사용합니다:" ;;
         warn_front_domain_fallback) echo "프론팅 도메인을 감지하지 못해 기본값을 사용합니다:" ;;
         err_ee_secret_autodetect_fail) echo "레거시 설정/컨테이너에서 EE 시크릿 자동 감지에 실패했습니다." ;;
+        diag_scope_note) echo "이 기능은 로컬 휴리스틱일 뿐입니다. DNS/fronting/IP/포트 문제를 추정할 수는 있지만, 어느 국가가 차단했는지 증명할 수는 없습니다." ;;
+        diag_no_managed_service) echo "아직 스크립트가 관리하는 EE/DD 서비스가 없습니다." ;;
+        diag_server_ip) echo "감지된 서버 IPv4" ;;
+        diag_entry_domain) echo "접속 도메인" ;;
+        diag_front_domain) echo "프론팅 도메인" ;;
+        diag_bind) echo "바인드 대상" ;;
+        diag_public_dns) echo "공용 DNS 해석 결과" ;;
+        diag_resolver_match) echo "서버 IPv4를 포함함:" ;;
+        diag_resolver_missing) echo "A 레코드가 없습니다." ;;
+        diag_resolver_mismatch) echo "서버 IPv4를 포함하지 않음:" ;;
+        diag_front_tls_ok) echo "이 VPS에서 프론팅 도메인 TLS 핸드셰이크가 성공했습니다." ;;
+        diag_front_tls_fail) echo "이 VPS에서 프론팅 도메인 TLS 핸드셰이크가 실패했습니다." ;;
+        diag_local_issue_first) echo "먼저 로컬 서비스/설정 문제가 감지되었습니다. 지역 차단 결론을 내리기 전에 이를 먼저 수정해야 합니다." ;;
+        diag_likely_dns_issue) echo "DNS/도메인 불일치가 감지되었습니다. 국가 차단보다는 도메인 해석/전파 문제일 가능성이 더 큽니다." ;;
+        diag_likely_ee_front_issue) echo "EE 프론팅 검사가 로컬에서 실패했습니다. 지역 차단보다는 front-domain 또는 EE secret/front 조합을 먼저 의심해야 합니다." ;;
+        diag_likely_region_block) echo "명확한 로컬 서비스 또는 DNS 문제는 보이지 않았습니다. 일부 국가에서만 실패한다면 IP/포트/프로토콜 차단 가능성이 더 큽니다." ;;
+        diag_country_probe_needed) echo "정확한 국가나 ISP 확인을 위해서는 외부 프로브 또는 해당 네트워크의 사용자 테스트가 필요합니다." ;;
+        diag_tool_missing) echo "필수 도구가 없습니다" ;;
       esac
       ;;
     ja)
@@ -617,6 +680,7 @@ t() {
         menu_upgrade) echo "イメージ更新（EE/DD）" ;;
         menu_self_update) echo "スクリプト自己更新" ;;
         menu_rotate_secret) echo "シークレット更新" ;;
+        menu_region_diag) echo "地域ブロック診断（推定）" ;;
         menu_uninstall) echo "アンインストール" ;;
         menu_help) echo "ヘルプ" ;;
         menu_exit) echo "終了" ;;
@@ -646,6 +710,7 @@ t() {
         step_migrate) echo "手順：稼働中の旧コンテナを script 管理の systemd サービスへ移行。" ;;
         step_backup) echo "手順：変更前バックアップを作成。" ;;
         step_rollback) echo "手順：バックアップからロールバック。" ;;
+        step_region_diag) echo "手順：地域ブロックのヒューリスティック診断を実行。" ;;
         ask_backup_id) echo "バックアップIDを入力（空欄=最新）: " ;;
         note_backup_saved) echo "バックアップ保存先:" ;;
         note_backup_latest) echo "最新バックアップを使用:" ;;
@@ -715,10 +780,29 @@ t() {
         usage_rollback) echo "rollback: 最新/指定バックアップから設定と unit を復元します。" ;;
         usage_install) echo "install コマンド: 対話式インストールを直接開始します。" ;;
         usage_rotate_dd) echo "DD の rotate-secret は 32-hex または dd+32-hex を受け付けます。" ;;
+        usage_region_diag) echo "regional-diagnose はローカルのヒューリスティック診断を実行します。正確な国/ISP 判定には外部プローブが必要です。" ;;
         warn_ee_domain_fallback) echo "EE ドメインを検出できないため、サーバー IP を使用します:" ;;
         warn_dd_domain_fallback) echo "DD ドメインを検出できないため、サーバー IP を使用します:" ;;
         warn_front_domain_fallback) echo "fronting ドメインを検出できないため、既定値を使用します:" ;;
         err_ee_secret_autodetect_fail) echo "旧設定/コンテナから EE シークレットを自動検出できません。" ;;
+        diag_scope_note) echo "これはローカルのヒューリスティック診断です。DNS/fronting/IP/ポート問題の推定はできますが、どの国が遮断しているかを証明することはできません。" ;;
+        diag_no_managed_service) echo "script 管理下の EE/DD サービスがまだありません。" ;;
+        diag_server_ip) echo "検出したサーバー IPv4" ;;
+        diag_entry_domain) echo "接続ドメイン" ;;
+        diag_front_domain) echo "fronting ドメイン" ;;
+        diag_bind) echo "バインド先" ;;
+        diag_public_dns) echo "公開 DNS の見え方" ;;
+        diag_resolver_match) echo "サーバー IPv4 を含みます:" ;;
+        diag_resolver_missing) echo "A レコードがありません。" ;;
+        diag_resolver_mismatch) echo "サーバー IPv4 を含みません:" ;;
+        diag_front_tls_ok) echo "この VPS から fronting ドメインへの TLS ハンドシェイクは成功しました。" ;;
+        diag_front_tls_fail) echo "この VPS から fronting ドメインへの TLS ハンドシェイクは失敗しました。" ;;
+        diag_local_issue_first) echo "先にローカルのサービス/設定問題が検出されました。地域ブロックを論じる前にまずこちらを直すべきです。" ;;
+        diag_likely_dns_issue) echo "DNS/ドメインの不整合が見つかりました。国別ブロックより、ドメイン解決や伝播の問題らしさが高いです。" ;;
+        diag_likely_ee_front_issue) echo "EE の fronting チェックがローカルで失敗しました。地域ブロックより front-domain または EE secret/front 組み合わせの問題が疑わしいです。" ;;
+        diag_likely_region_block) echo "明確なローカルサービス/DNS問題は見当たりません。一部の国だけ失敗するなら、IP/ポート/プロトコル単位の遮断の可能性が高いです。" ;;
+        diag_country_probe_needed) echo "正確な国や ISP の特定には、外部プローブまたはそのネットワーク側のユーザーテストが引き続き必要です。" ;;
+        diag_tool_missing) echo "必要なツールが見つかりません" ;;
       esac
       ;;
   esac
@@ -743,6 +827,24 @@ port_in_use() {
   else
     return 1
   fi
+}
+
+diag_format_records() {
+  local records="$1"
+  local compact=""
+  compact="$(tr '\n' ' ' <<<"$records" | xargs 2>/dev/null || true)"
+  if [[ -n "$compact" ]]; then
+    printf '%s' "$compact"
+  else
+    printf 'n/a'
+  fi
+}
+
+resolve_domain_a_records_via_resolver() {
+  local domain="$1"
+  local resolver="$2"
+  command -v dig >/dev/null 2>&1 || return 127
+  dig @"$resolver" +short A "$domain" 2>/dev/null | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/'
 }
 
 show_port_holders() {
@@ -1041,6 +1143,7 @@ $(t usage_title)
   install.sh upgrade [--mode ee|dd|all] [--mtg-image IMAGE@sha256:...] [--dd-image IMAGE@sha256:...]
   install.sh healthcheck [--mode ee|dd|all]
   install.sh self-heal [--mode ee|dd|all]
+  install.sh regional-diagnose [--mode ee|dd|all]
   install.sh rotate-secret --mode ee|dd [--secret SECRET] [--front-domain DOMAIN]
 
 $(t usage_notes)
@@ -1050,6 +1153,7 @@ $(t usage_notes)
   - $(t usage_self_update)
   - $(t usage_install)
   - $(t usage_rotate_dd)
+  - $(t usage_region_diag)
 EOF
 }
 
@@ -1572,6 +1676,106 @@ extract_ee_secret_from_container() {
   fi
 }
 
+DIAG_LOCAL_ISSUE=0
+DIAG_DNS_ISSUE=0
+DIAG_FRONT_ISSUE=0
+DIAG_ACTIVE_MODES=0
+
+diag_reset_state() {
+  DIAG_LOCAL_ISSUE=0
+  DIAG_DNS_ISSUE=0
+  DIAG_FRONT_ISSUE=0
+  DIAG_ACTIVE_MODES=0
+}
+
+diag_domain_dns_view() {
+  local domain="$1"
+  local server_ip="$2"
+  local resolver=""
+  local records=""
+  printf '[info] %s: %s\n' "$(t diag_public_dns)" "$domain"
+  if ! command -v dig >/dev/null 2>&1; then
+    printf '[warn] %s: dig\n' "$(t diag_tool_missing)"
+    return 0
+  fi
+  for resolver in 1.1.1.1 8.8.8.8 9.9.9.9; do
+    records="$(resolve_domain_a_records_via_resolver "$domain" "$resolver" || true)"
+    if [[ -z "$records" ]]; then
+      printf '[warn] %s %s\n' "$resolver" "$(t diag_resolver_missing)"
+      DIAG_DNS_ISSUE=1
+    elif [[ -n "$server_ip" ]] && ! grep -qx "$server_ip" <<<"$records"; then
+      printf '[warn] %s %s %s\n' "$resolver" "$(t diag_resolver_mismatch)" "$(diag_format_records "$records")"
+      DIAG_DNS_ISSUE=1
+    else
+      printf '[ok] %s %s %s\n' "$resolver" "$(t diag_resolver_match)" "$(diag_format_records "$records")"
+    fi
+  done
+}
+
+diag_mode_regional() {
+  local mode="$1"
+  local server_ip="$2"
+  local env_file=""
+  local health_rc=0
+  local entry_domain=""
+  local bind_ip=""
+  local port=""
+  local front_domain=""
+
+  case "$mode" in
+    ee)
+      env_file="$EE_ENV_FILE"
+      ;;
+    dd)
+      env_file="$DD_ENV_FILE"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  echo
+  echo "---- ${mode} ----"
+  check_mode_health "$mode" || health_rc=$?
+  if [[ "$health_rc" -eq 1 ]]; then
+    DIAG_LOCAL_ISSUE=1
+  fi
+
+  [[ -f "$env_file" ]] || return 0
+  DIAG_ACTIVE_MODES=$((DIAG_ACTIVE_MODES + 1))
+
+  # shellcheck disable=SC1090
+  source "$env_file"
+  if [[ "$mode" == "ee" ]]; then
+    entry_domain="${EE_DOMAIN:-}"
+    bind_ip="${EE_BIND_IP:-0.0.0.0}"
+    port="${EE_PORT:-}"
+    front_domain="${FRONT_DOMAIN:-}"
+  else
+    entry_domain="${DD_DOMAIN:-}"
+    bind_ip="${DD_BIND_IP:-0.0.0.0}"
+    port="${DD_PORT:-}"
+  fi
+
+  printf '[info] %s: %s\n' "$(t diag_entry_domain)" "${entry_domain:-n/a}"
+  printf '[info] %s: %s:%s\n' "$(t diag_bind)" "${bind_ip:-0.0.0.0}" "${port:-n/a}"
+  if [[ -n "$entry_domain" ]]; then
+    diag_domain_dns_view "$entry_domain" "$server_ip"
+  fi
+
+  if [[ "$mode" == "ee" && -n "$front_domain" ]]; then
+    printf '[info] %s: %s\n' "$(t diag_front_domain)" "$front_domain"
+    if ! command -v openssl >/dev/null 2>&1; then
+      printf '[warn] %s: openssl\n' "$(t diag_tool_missing)"
+    elif timeout 6 openssl s_client -connect "${front_domain}:443" -servername "${front_domain}" </dev/null >/dev/null 2>&1; then
+      printf '[ok] %s\n' "$(t diag_front_tls_ok)"
+    else
+      printf '[warn] %s\n' "$(t diag_front_tls_fail)"
+      DIAG_FRONT_ISSUE=1
+    fi
+  fi
+}
+
 check_mode_health() {
   local mode="$1"
   local service_name=""
@@ -1731,6 +1935,46 @@ cmd_self_heal() {
     fi
   fi
   return "$failed"
+}
+
+cmd_regional_diagnose() {
+  local server_ip=""
+  diag_reset_state
+  server_ip="$(get_primary_ipv4)"
+
+  echo
+  t step_region_diag
+  printf '[note] %s\n' "$(t diag_scope_note)"
+  printf '[info] %s: %s\n' "$(t diag_server_ip)" "${server_ip:-n/a}"
+
+  if [[ "$DEPLOY_EE" -eq 1 ]]; then
+    diag_mode_regional ee "$server_ip"
+  fi
+  if [[ "$DEPLOY_DD" -eq 1 ]]; then
+    diag_mode_regional dd "$server_ip"
+  fi
+
+  echo
+  if [[ "$DIAG_ACTIVE_MODES" -eq 0 ]]; then
+    printf '[summary] %s\n' "$(t diag_no_managed_service)"
+    return 1
+  fi
+
+  if [[ "$DIAG_LOCAL_ISSUE" -eq 1 ]]; then
+    printf '[summary] %s\n' "$(t diag_local_issue_first)"
+  elif [[ "$DIAG_DNS_ISSUE" -eq 1 ]]; then
+    printf '[summary] %s\n' "$(t diag_likely_dns_issue)"
+  elif [[ "$DIAG_FRONT_ISSUE" -eq 1 ]]; then
+    printf '[summary] %s\n' "$(t diag_likely_ee_front_issue)"
+  else
+    printf '[summary] %s\n' "$(t diag_likely_region_block)"
+  fi
+  printf '[note] %s\n' "$(t diag_country_probe_needed)"
+
+  if [[ "$DIAG_LOCAL_ISSUE" -eq 1 ]]; then
+    return 1
+  fi
+  return 0
 }
 
 cmd_uninstall() {
@@ -2474,8 +2718,9 @@ interactive_menu() {
     echo "6) $(t menu_migrate)"
     echo "7) $(t menu_rollback)"
     echo "8) $(t menu_rotate_secret)"
-    echo "9) $(t menu_uninstall)"
-    echo "10) $(t menu_help)"
+    echo "9) $(t menu_region_diag)"
+    echo "10) $(t menu_uninstall)"
+    echo "11) $(t menu_help)"
     echo "0) $(t menu_exit)"
     read -rp "> " choice
     choice="${choice// /}"
@@ -2552,12 +2797,18 @@ interactive_menu() {
       9)
         mode="$(prompt_mode_all)"
         set_mode_flags "$mode" || continue
+        cmd_regional_diagnose || true
+        pause_menu
+        ;;
+      10)
+        mode="$(prompt_mode_all)"
+        set_mode_flags "$mode" || continue
         if confirm_continue; then
           cmd_uninstall
         fi
         pause_menu
         ;;
-      10)
+      11)
         usage
         pause_menu
         ;;
@@ -2720,6 +2971,24 @@ main() {
       done
       set_mode_flags "$mode" || exit 1
       cmd_healthcheck
+      ;;
+    regional-diagnose | regional_diagnose)
+      shift || true
+      while (($#)); do
+        case "$1" in
+          --mode)
+            mode="${2:-all}"
+            shift 2
+            ;;
+          *)
+            printf '%s %s\n' "$(t err_unknown_arg)" "$1"
+            usage
+            exit 1
+            ;;
+        esac
+      done
+      set_mode_flags "$mode" || exit 1
+      cmd_regional_diagnose
       ;;
     self-heal | self_heal)
       shift || true
