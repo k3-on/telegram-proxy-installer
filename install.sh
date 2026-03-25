@@ -1163,7 +1163,7 @@ get_primary_ipv6() {
   local ip=""
   ip="$(ip -6 route get 2606:4700:4700::1111 2>/dev/null | awk '{for (i=1;i<=NF;i++) if ($i=="src") {print $(i+1); exit}}')"
   if [[ -z "$ip" ]]; then
-    ip="$(ip -6 -o addr show scope global 2>/dev/null | awk '{split($4,a,\"/\"); print a[1]; exit}')"
+    ip="$(ip -6 -o addr show scope global 2>/dev/null | awk '{split($4,a,"/"); print a[1]; exit}')"
   fi
   printf '%s' "$ip"
 }
