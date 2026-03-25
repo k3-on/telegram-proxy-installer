@@ -132,10 +132,16 @@ t() {
         ask_bind_ip_mode) echo "Choose bind IP:" ;;
         opt_all_interfaces) echo "all interfaces, recommended" ;;
         opt_primary_ipv4) echo "primary IPv4" ;;
+        opt_primary_ipv6) echo "primary IPv6" ;;
+        opt_disabled) echo "disabled" ;;
         opt_unavailable) echo "unavailable" ;;
         ask_bind_ipv4) echo "Enter bind IPv4 (or 0.0.0.0): " ;;
+        ask_bind_ipv6_mode) echo "Choose bind IPv6:" ;;
+        ask_bind_ipv6) echo "Enter bind IPv6 (or ::): " ;;
         err_primary_ipv4_unavailable) echo "Primary IPv4 unavailable." ;;
+        err_primary_ipv6_unavailable) echo "Primary IPv6 unavailable." ;;
         err_ipv4_invalid) echo "Invalid IPv4 format." ;;
+        err_ipv6_invalid) echo "Invalid IPv6 format." ;;
         err_bind_ip_not_found) echo "IP not found on this host." ;;
         step_self_update) echo "Step: Updating script repository (git pull --ff-only)." ;;
         err_self_update_not_git) echo "Self-update requires a git clone directory containing .git." ;;
@@ -194,7 +200,9 @@ t() {
         preflight_warnings) echo "Preflight warnings:" ;;
         aborted_by_user) echo "Aborted by user." ;;
         note_a_records) echo "A records" ;;
+        note_aaaa_records) echo "AAAA records" ;;
         note_server_ip) echo "Server IP" ;;
+        note_server_ipv6) echo "Server IPv6" ;;
         label_running) echo "running" ;;
         label_configured) echo "configured" ;;
         label_expected) echo "expected" ;;
@@ -221,6 +229,8 @@ t() {
         warn_dd_domain_fallback) echo "DD domain not detected. Using server IP:" ;;
         warn_front_domain_fallback) echo "Fronting domain not detected. Using default:" ;;
         err_ee_secret_autodetect_fail) echo "Cannot auto-detect EE secret from legacy config/container." ;;
+        warn_dns_aaaa_unresolved) echo "Warning: domain has no AAAA record yet." ;;
+        warn_dns_aaaa_mismatch) echo "Warning: domain AAAA records do not include this server IPv6." ;;
         diag_scope_note) echo "This is a local heuristic only. It can suggest likely DNS/fronting/IP-port issues, but it cannot prove which countries are blocking you." ;;
         diag_no_managed_service) echo "No script-managed EE/DD service is installed yet." ;;
         diag_server_ip) echo "Detected server IPv4" ;;
@@ -228,6 +238,7 @@ t() {
         diag_front_domain) echo "Fronting domain" ;;
         diag_bind) echo "Bind target" ;;
         diag_public_dns) echo "Public DNS resolver view" ;;
+        diag_literal_ipv4) echo "Entry target is a literal IPv4. Skipping A-record checks." ;;
         diag_resolver_match) echo "includes server IPv4:" ;;
         diag_resolver_missing) echo "has no A record." ;;
         diag_resolver_mismatch) echo "does not include server IPv4:" ;;
@@ -320,10 +331,16 @@ t() {
         ask_bind_ip_mode) echo "请选择绑定 IP：" ;;
         opt_all_interfaces) echo "全部网卡，推荐" ;;
         opt_primary_ipv4) echo "主 IPv4" ;;
+        opt_primary_ipv6) echo "主 IPv6" ;;
+        opt_disabled) echo "禁用" ;;
         opt_unavailable) echo "不可用" ;;
         ask_bind_ipv4) echo "请输入绑定 IPv4（或 0.0.0.0）： " ;;
+        ask_bind_ipv6_mode) echo "请选择绑定 IPv6：" ;;
+        ask_bind_ipv6) echo "请输入绑定 IPv6（或 ::）： " ;;
         err_primary_ipv4_unavailable) echo "主 IPv4 不可用。" ;;
+        err_primary_ipv6_unavailable) echo "主 IPv6 不可用。" ;;
         err_ipv4_invalid) echo "IPv4 格式无效。" ;;
+        err_ipv6_invalid) echo "IPv6 格式无效。" ;;
         err_bind_ip_not_found) echo "该 IP 不在本机网卡上。" ;;
         step_self_update) echo "步骤：更新脚本仓库（git pull --ff-only）。" ;;
         err_self_update_not_git) echo "脚本自更新需要在包含 .git 的仓库目录中执行。" ;;
@@ -382,7 +399,9 @@ t() {
         preflight_warnings) echo "前置检查警告：" ;;
         aborted_by_user) echo "用户已中止。" ;;
         note_a_records) echo "A 记录" ;;
+        note_aaaa_records) echo "AAAA 记录" ;;
         note_server_ip) echo "本机 IP" ;;
+        note_server_ipv6) echo "本机 IPv6" ;;
         label_running) echo "运行中" ;;
         label_configured) echo "配置值" ;;
         label_expected) echo "期望" ;;
@@ -409,6 +428,8 @@ t() {
         warn_dd_domain_fallback) echo "未检测到 DD 域名，改用服务器 IP：" ;;
         warn_front_domain_fallback) echo "未检测到 fronting 域名，改用默认值：" ;;
         err_ee_secret_autodetect_fail) echo "无法从旧配置/容器自动识别 EE secret。" ;;
+        warn_dns_aaaa_unresolved) echo "警告：该域名当前没有 AAAA 记录。" ;;
+        warn_dns_aaaa_mismatch) echo "警告：该域名的 AAAA 记录未包含本机 IPv6。" ;;
         diag_scope_note) echo "这只是本地启发式诊断。它可以提示更像是 DNS/fronting/IP/端口问题，但不能证明到底是哪些国家在屏蔽你。" ;;
         diag_no_managed_service) echo "当前还没有脚本托管的 EE/DD 服务。" ;;
         diag_server_ip) echo "检测到的服务器 IPv4" ;;
@@ -416,6 +437,7 @@ t() {
         diag_front_domain) echo "Fronting 域名" ;;
         diag_bind) echo "绑定目标" ;;
         diag_public_dns) echo "公共 DNS 解析视角" ;;
+        diag_literal_ipv4) echo "入口目标是裸 IPv4，跳过 A 记录检查。" ;;
         diag_resolver_match) echo "包含本机 IPv4：" ;;
         diag_resolver_missing) echo "没有 A 记录。" ;;
         diag_resolver_mismatch) echo "未包含本机 IPv4：" ;;
@@ -508,10 +530,16 @@ t() {
         ask_bind_ip_mode) echo "바인드 IP를 선택하세요:" ;;
         opt_all_interfaces) echo "모든 인터페이스, 권장" ;;
         opt_primary_ipv4) echo "기본 IPv4" ;;
+        opt_primary_ipv6) echo "기본 IPv6" ;;
+        opt_disabled) echo "사용 안 함" ;;
         opt_unavailable) echo "사용 불가" ;;
         ask_bind_ipv4) echo "바인드 IPv4 입력(또는 0.0.0.0): " ;;
+        ask_bind_ipv6_mode) echo "바인드 IPv6를 선택하세요:" ;;
+        ask_bind_ipv6) echo "바인드 IPv6 입력(또는 ::): " ;;
         err_primary_ipv4_unavailable) echo "기본 IPv4를 사용할 수 없습니다." ;;
+        err_primary_ipv6_unavailable) echo "기본 IPv6를 사용할 수 없습니다." ;;
         err_ipv4_invalid) echo "IPv4 형식이 올바르지 않습니다." ;;
+        err_ipv6_invalid) echo "IPv6 형식이 올바르지 않습니다." ;;
         err_bind_ip_not_found) echo "이 호스트에서 해당 IP를 찾을 수 없습니다." ;;
         step_self_update) echo "단계: 스크립트 저장소 업데이트(git pull --ff-only)." ;;
         err_self_update_not_git) echo "self-update는 .git 이 있는 git clone 디렉터리에서만 가능합니다." ;;
@@ -570,7 +598,9 @@ t() {
         preflight_warnings) echo "사전 점검 경고:" ;;
         aborted_by_user) echo "사용자에 의해 중단되었습니다." ;;
         note_a_records) echo "A 레코드" ;;
+        note_aaaa_records) echo "AAAA 레코드" ;;
         note_server_ip) echo "서버 IP" ;;
+        note_server_ipv6) echo "서버 IPv6" ;;
         label_running) echo "실행값" ;;
         label_configured) echo "설정값" ;;
         label_expected) echo "기대값" ;;
@@ -597,6 +627,8 @@ t() {
         warn_dd_domain_fallback) echo "DD 도메인을 감지하지 못해 서버 IP를 사용합니다:" ;;
         warn_front_domain_fallback) echo "프론팅 도메인을 감지하지 못해 기본값을 사용합니다:" ;;
         err_ee_secret_autodetect_fail) echo "레거시 설정/컨테이너에서 EE 시크릿 자동 감지에 실패했습니다." ;;
+        warn_dns_aaaa_unresolved) echo "경고: 도메인에 AAAA 레코드가 없습니다." ;;
+        warn_dns_aaaa_mismatch) echo "경고: 도메인 AAAA 레코드에 서버 IPv6가 없습니다." ;;
         diag_scope_note) echo "이 기능은 로컬 휴리스틱일 뿐입니다. DNS/fronting/IP/포트 문제를 추정할 수는 있지만, 어느 국가가 차단했는지 증명할 수는 없습니다." ;;
         diag_no_managed_service) echo "아직 스크립트가 관리하는 EE/DD 서비스가 없습니다." ;;
         diag_server_ip) echo "감지된 서버 IPv4" ;;
@@ -604,6 +636,7 @@ t() {
         diag_front_domain) echo "프론팅 도메인" ;;
         diag_bind) echo "바인드 대상" ;;
         diag_public_dns) echo "공용 DNS 해석 결과" ;;
+        diag_literal_ipv4) echo "접속 대상이 순수 IPv4입니다. A 레코드 검사를 건너뜁니다." ;;
         diag_resolver_match) echo "서버 IPv4를 포함함:" ;;
         diag_resolver_missing) echo "A 레코드가 없습니다." ;;
         diag_resolver_mismatch) echo "서버 IPv4를 포함하지 않음:" ;;
@@ -696,10 +729,16 @@ t() {
         ask_bind_ip_mode) echo "バインドIPを選択してください:" ;;
         opt_all_interfaces) echo "全インターフェース、推奨" ;;
         opt_primary_ipv4) echo "プライマリIPv4" ;;
+        opt_primary_ipv6) echo "プライマリIPv6" ;;
+        opt_disabled) echo "無効" ;;
         opt_unavailable) echo "利用不可" ;;
         ask_bind_ipv4) echo "バインドIPv4を入力（または0.0.0.0）: " ;;
+        ask_bind_ipv6_mode) echo "バインドIPv6を選択してください:" ;;
+        ask_bind_ipv6) echo "バインドIPv6を入力（または::）: " ;;
         err_primary_ipv4_unavailable) echo "プライマリIPv4は利用できません。" ;;
+        err_primary_ipv6_unavailable) echo "プライマリIPv6は利用できません。" ;;
         err_ipv4_invalid) echo "IPv4形式が不正です。" ;;
+        err_ipv6_invalid) echo "IPv6形式が不正です。" ;;
         err_bind_ip_not_found) echo "このホストにそのIPはありません。" ;;
         step_self_update) echo "手順：スクリプトリポジトリを更新（git pull --ff-only）。" ;;
         err_self_update_not_git) echo "self-update は .git を含む git clone ディレクトリで実行する必要があります。" ;;
@@ -758,7 +797,9 @@ t() {
         preflight_warnings) echo "事前チェック警告:" ;;
         aborted_by_user) echo "ユーザーにより中断しました。" ;;
         note_a_records) echo "A レコード" ;;
+        note_aaaa_records) echo "AAAA レコード" ;;
         note_server_ip) echo "サーバー IP" ;;
+        note_server_ipv6) echo "サーバー IPv6" ;;
         label_running) echo "実行値" ;;
         label_configured) echo "設定値" ;;
         label_expected) echo "期待値" ;;
@@ -785,6 +826,8 @@ t() {
         warn_dd_domain_fallback) echo "DD ドメインを検出できないため、サーバー IP を使用します:" ;;
         warn_front_domain_fallback) echo "fronting ドメインを検出できないため、既定値を使用します:" ;;
         err_ee_secret_autodetect_fail) echo "旧設定/コンテナから EE シークレットを自動検出できません。" ;;
+        warn_dns_aaaa_unresolved) echo "警告：ドメインに AAAA レコードがありません。" ;;
+        warn_dns_aaaa_mismatch) echo "警告：ドメイン AAAA レコードにこのサーバーIPv6がありません。" ;;
         diag_scope_note) echo "これはローカルのヒューリスティック診断です。DNS/fronting/IP/ポート問題の推定はできますが、どの国が遮断しているかを証明することはできません。" ;;
         diag_no_managed_service) echo "script 管理下の EE/DD サービスがまだありません。" ;;
         diag_server_ip) echo "検出したサーバー IPv4" ;;
@@ -792,6 +835,7 @@ t() {
         diag_front_domain) echo "fronting ドメイン" ;;
         diag_bind) echo "バインド先" ;;
         diag_public_dns) echo "公開 DNS の見え方" ;;
+        diag_literal_ipv4) echo "接続先は生の IPv4 です。A レコード確認をスキップします。" ;;
         diag_resolver_match) echo "サーバー IPv4 を含みます:" ;;
         diag_resolver_missing) echo "A レコードがありません。" ;;
         diag_resolver_mismatch) echo "サーバー IPv4 を含みません:" ;;
@@ -845,6 +889,42 @@ resolve_domain_a_records_via_resolver() {
   local resolver="$2"
   command -v dig >/dev/null 2>&1 || return 127
   dig @"$resolver" +short A "$domain" 2>/dev/null | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/'
+}
+
+resolve_domain_aaaa_records_via_resolver() {
+  local domain="$1"
+  local resolver="$2"
+  command -v dig >/dev/null 2>&1 || return 127
+  dig @"$resolver" +short AAAA "$domain" 2>/dev/null | awk '/:/'
+}
+
+format_bind_targets() {
+  local bind_ipv4="$1"
+  local bind_ipv6="$2"
+  local port="$3"
+  local out=()
+  if [[ -n "$bind_ipv4" ]]; then
+    out+=("${bind_ipv4}:${port}")
+  fi
+  if [[ -n "$bind_ipv6" ]]; then
+    out+=("[${bind_ipv6}]:${port}")
+  fi
+  printf '%s' "${out[*]}"
+}
+
+docker_publish_args() {
+  local bind_ipv4="$1"
+  local bind_ipv6="$2"
+  local host_port="$3"
+  local container_port="$4"
+  local args=()
+  if [[ -n "$bind_ipv4" ]]; then
+    args+=("-p" "${bind_ipv4}:${host_port}:${container_port}")
+  fi
+  if [[ -n "$bind_ipv6" ]]; then
+    args+=("-p" "[${bind_ipv6}]:${host_port}:${container_port}")
+  fi
+  printf '%s' "${args[*]}"
 }
 
 show_port_holders() {
@@ -1079,28 +1159,63 @@ get_primary_ipv4() {
   printf '%s' "$ip"
 }
 
+get_primary_ipv6() {
+  local ip=""
+  ip="$(ip -6 route get 2606:4700:4700::1111 2>/dev/null | awk '{for (i=1;i<=NF;i++) if ($i=="src") {print $(i+1); exit}}')"
+  if [[ -z "$ip" ]]; then
+    ip="$(ip -6 -o addr show scope global 2>/dev/null | awk '{split($4,a,\"/\"); print a[1]; exit}')"
+  fi
+  printf '%s' "$ip"
+}
+
 resolve_domain_a_records() {
   local domain="$1"
   dig +short A "$domain" 2>/dev/null | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/'
 }
 
+resolve_domain_aaaa_records() {
+  local domain="$1"
+  dig +short AAAA "$domain" 2>/dev/null | awk '/:/'
+}
+
 check_domain_dns() {
   local domain="$1"
-  local server_ip="$2"
-  local records
-  records="$(resolve_domain_a_records "$domain" || true)"
+  local server_ipv4="$2"
+  local server_ipv6="$3"
+  local need_ipv4="$4"
+  local need_ipv6="$5"
+  local records=""
 
-  if [[ -z "$records" ]]; then
-    printf '%s (%s)\n' "$(t warn_dns_unresolved)" "${domain}"
-    confirm_continue || return 1
-    return 0
+  if [[ "$need_ipv4" == "1" ]]; then
+    records="$(resolve_domain_a_records "$domain" || true)"
+    if [[ -z "$records" ]]; then
+      printf '%s (%s)\n' "$(t warn_dns_unresolved)" "${domain}"
+      confirm_continue || return 1
+      return 0
+    fi
+
+    if [[ -n "$server_ipv4" ]] && ! grep -qx "$server_ipv4" <<<"$records"; then
+      printf '%s (%s)\n' "$(t warn_dns_mismatch)" "${domain}"
+      echo "$(t note_a_records): $(tr '\n' ' ' <<<"$records" | xargs)"
+      echo "$(t note_server_ip): ${server_ipv4}"
+      confirm_continue || return 1
+    fi
   fi
 
-  if [[ -n "$server_ip" ]] && ! grep -qx "$server_ip" <<<"$records"; then
-    printf '%s (%s)\n' "$(t warn_dns_mismatch)" "${domain}"
-    echo "$(t note_a_records): $(tr '\n' ' ' <<<"$records" | xargs)"
-    echo "$(t note_server_ip): ${server_ip}"
-    confirm_continue || return 1
+  if [[ "$need_ipv6" == "1" ]]; then
+    records="$(resolve_domain_aaaa_records "$domain" || true)"
+    if [[ -z "$records" ]]; then
+      printf '%s (%s)\n' "$(t warn_dns_aaaa_unresolved)" "${domain}"
+      confirm_continue || return 1
+      return 0
+    fi
+
+    if [[ -n "$server_ipv6" ]] && ! grep -Fqx "$server_ipv6" <<<"$records"; then
+      printf '%s (%s)\n' "$(t warn_dns_aaaa_mismatch)" "${domain}"
+      echo "$(t note_aaaa_records): $(tr '\n' ' ' <<<"$records" | xargs)"
+      echo "$(t note_server_ipv6): ${server_ipv6}"
+      confirm_continue || return 1
+    fi
   fi
 }
 
@@ -1189,12 +1304,27 @@ is_valid_ipv4() {
   done
 }
 
+is_valid_ipv6() {
+  local ip="$1"
+  [[ "$ip" == "::" ]] && return 0
+  [[ "$ip" == *:* ]] || return 1
+  return 0
+}
+
 is_local_bind_ip() {
   local ip="$1"
   if [[ "$ip" == "0.0.0.0" ]]; then
     return 0
   fi
   ip -4 -o addr show 2>/dev/null | awk '{split($4,a,"/"); print a[1]}' | grep -qx "$ip"
+}
+
+is_local_bind_ipv6() {
+  local ip="$1"
+  if [[ "$ip" == "::" ]]; then
+    return 0
+  fi
+  ip -6 -o addr show 2>/dev/null | awk '{split($4,a,"/"); print a[1]}' | grep -Fqx "$ip"
 }
 
 ask_bind_ip_with_options() {
@@ -1246,13 +1376,72 @@ ask_bind_ip_with_options() {
   done
 }
 
+ask_bind_ipv6_with_options() {
+  local var_name="$1"
+  local primary_ip="$2"
+  local choice=""
+  local input_ip=""
+  while true; do
+    t ask_bind_ipv6_mode
+    echo "1) $(t opt_disabled)"
+    echo "2) :: ($(t opt_all_interfaces))"
+    if [[ -n "$primary_ip" ]]; then
+      echo "3) ${primary_ip} ($(t opt_primary_ipv6))"
+    else
+      echo "3) $(t opt_primary_ipv6) ($(t opt_unavailable))"
+    fi
+    echo "4) $(t opt_manual_input)"
+    read -rp "> " choice
+    choice="${choice// /}"
+    case "$choice" in
+      1)
+        printf -v "$var_name" ""
+        return 0
+        ;;
+      2)
+        printf -v "$var_name" "::"
+        return 0
+        ;;
+      3)
+        if [[ -n "$primary_ip" ]]; then
+          printf -v "$var_name" "%s" "$primary_ip"
+          return 0
+        fi
+        t err_primary_ipv6_unavailable
+        ;;
+      4)
+        read -rp "$(t ask_bind_ipv6)" input_ip
+        input_ip="${input_ip// /}"
+        if ! is_valid_ipv6 "$input_ip"; then
+          t err_ipv6_invalid
+          continue
+        fi
+        if ! is_local_bind_ipv6 "$input_ip"; then
+          t err_bind_ip_not_found
+          continue
+        fi
+        printf -v "$var_name" "%s" "$input_ip"
+        return 0
+        ;;
+      *)
+        t err_choice_invalid
+        ;;
+    esac
+  done
+}
+
 ports_conflict_for_bindings() {
   local p1="$1"
-  local ip1="$2"
-  local p2="$3"
-  local ip2="$4"
+  local ip1_v4="$2"
+  local ip1_v6="$3"
+  local p2="$4"
+  local ip2_v4="$5"
+  local ip2_v6="$6"
   [[ "$p1" == "$p2" ]] || return 1
-  if [[ "$ip1" == "0.0.0.0" || "$ip2" == "0.0.0.0" || "$ip1" == "$ip2" ]]; then
+  if [[ -n "$ip1_v4" && -n "$ip2_v4" ]] && [[ "$ip1_v4" == "0.0.0.0" || "$ip2_v4" == "0.0.0.0" || "$ip1_v4" == "$ip2_v4" ]]; then
+    return 0
+  fi
+  if [[ -n "$ip1_v6" && -n "$ip2_v6" ]] && [[ "$ip1_v6" == "::" || "$ip2_v6" == "::" || "$ip1_v6" == "$ip2_v6" ]]; then
     return 0
   fi
   return 1
@@ -1262,7 +1451,10 @@ ufw_allow_proxy_port() {
   local p="$1"
   local bind_ip="$2"
   local strict="$3"
-  if [[ "$strict" =~ ^[Yy]$ ]] && [[ "$bind_ip" != "0.0.0.0" ]]; then
+  if [[ -z "$bind_ip" ]]; then
+    return 0
+  fi
+  if [[ "$strict" =~ ^[Yy]$ ]] && [[ "$bind_ip" != "0.0.0.0" && "$bind_ip" != "::" ]]; then
     ufw allow proto tcp from any to "$bind_ip" port "$p" >/dev/null
   else
     ufw allow "${p}/tcp" >/dev/null
@@ -1342,6 +1534,7 @@ EE_DOMAIN=${EE_DOMAIN}
 FRONT_DOMAIN=${FRONT_DOMAIN}
 EE_PORT=${EE_PORT}
 EE_BIND_IP=${EE_BIND_IP}
+EE_BIND_IPV6=${EE_BIND_IPV6}
 MTG_IMAGE=${MTG_IMAGE}
 EE_SECRET=${EE_SECRET}
 EOF
@@ -1353,6 +1546,7 @@ write_dd_env_file() {
 DD_DOMAIN=${DD_DOMAIN}
 DD_PORT=${DD_PORT}
 DD_BIND_IP=${DD_BIND_IP}
+DD_BIND_IPV6=${DD_BIND_IPV6}
 DD_BASE_SECRET=${DD_BASE_SECRET}
 DD_SECRET=${DD_SECRET}
 DD_IMAGE=${DD_IMAGE}
@@ -1360,7 +1554,9 @@ EOF
 }
 
 write_ee_systemd_unit() {
-  cat >/etc/systemd/system/"$EE_SERVICE_NAME" <<'EOF'
+  local publish_args=""
+  publish_args="$(docker_publish_args "${EE_BIND_IP:-0.0.0.0}" "${EE_BIND_IPV6:-}" "${EE_PORT}" "3128")"
+  cat >/etc/systemd/system/"$EE_SERVICE_NAME" <<EOF
 [Unit]
 Description=Telegram Proxy EE (mtg)
 After=network-online.target docker.service
@@ -1373,7 +1569,7 @@ Restart=always
 RestartSec=5
 EnvironmentFile=/etc/telegram-proxy/ee.env
 ExecStartPre=-/usr/bin/docker rm -f mtg-ee
-ExecStart=/usr/bin/docker run --name mtg-ee --cap-drop=ALL --security-opt=no-new-privileges --pids-limit=256 -v /opt/mtg/config.toml:/config.toml:ro -p ${EE_BIND_IP}:${EE_PORT}:3128 ${MTG_IMAGE}
+ExecStart=/usr/bin/docker run --name mtg-ee --cap-drop=ALL --security-opt=no-new-privileges --pids-limit=256 -v /opt/mtg/config.toml:/config.toml:ro ${publish_args} ${MTG_IMAGE}
 ExecStop=/usr/bin/docker stop -t 10 mtg-ee
 ExecStopPost=-/usr/bin/docker rm -f mtg-ee
 
@@ -1383,7 +1579,9 @@ EOF
 }
 
 write_dd_systemd_unit() {
-  cat >/etc/systemd/system/"$DD_SERVICE_NAME" <<'EOF'
+  local publish_args=""
+  publish_args="$(docker_publish_args "${DD_BIND_IP:-0.0.0.0}" "${DD_BIND_IPV6:-}" "${DD_PORT}" "443")"
+  cat >/etc/systemd/system/"$DD_SERVICE_NAME" <<EOF
 [Unit]
 Description=Telegram Proxy DD (MTProxy padding)
 After=network-online.target docker.service
@@ -1396,7 +1594,7 @@ Restart=always
 RestartSec=5
 EnvironmentFile=/etc/telegram-proxy/dd.env
 ExecStartPre=-/usr/bin/docker rm -f mtproto-dd
-ExecStart=/usr/bin/docker run --name mtproto-dd --cap-drop=ALL --cap-add=NET_BIND_SERVICE --cap-add=SETGID --cap-add=SETUID --security-opt=no-new-privileges --pids-limit=256 -p ${DD_BIND_IP}:${DD_PORT}:443 -e SECRET=${DD_BASE_SECRET} ${DD_IMAGE}
+ExecStart=/usr/bin/docker run --name mtproto-dd --cap-drop=ALL --cap-add=NET_BIND_SERVICE --cap-add=SETGID --cap-add=SETUID --security-opt=no-new-privileges --pids-limit=256 ${publish_args} -e SECRET=${DD_BASE_SECRET} ${DD_IMAGE}
 ExecStop=/usr/bin/docker stop -t 10 mtproto-dd
 ExecStopPost=-/usr/bin/docker rm -f mtproto-dd
 
@@ -1598,21 +1796,45 @@ docker_env_value() {
     | awk -F= -v k="$key" '$1 == k {sub($1"=","",$0); print; exit}'
 }
 
-docker_binding_ip() {
+docker_binding_lines() {
   local container="$1"
   local container_port="$2"
-  local ip=""
-  ip="$(docker inspect -f "{{with index .HostConfig.PortBindings \"${container_port}\"}}{{(index . 0).HostIp}}{{end}}" "$container" 2>/dev/null || true)"
-  if [[ -z "$ip" ]]; then
-    ip="0.0.0.0"
-  fi
-  printf '%s' "$ip"
+  docker inspect -f "{{with index .HostConfig.PortBindings \"${container_port}\"}}{{range .}}{{println .HostIp \" \" .HostPort}}{{end}}{{end}}" "$container" 2>/dev/null \
+    | awk 'NF == 1 {print "0.0.0.0", $1; next} NF >= 2 {print $1, $2}'
 }
 
 docker_binding_port() {
   local container="$1"
   local container_port="$2"
-  docker inspect -f "{{with index .HostConfig.PortBindings \"${container_port}\"}}{{(index . 0).HostPort}}{{end}}" "$container" 2>/dev/null || true
+  docker_binding_lines "$container" "$container_port" | awk 'NF {print $2; exit}'
+}
+
+docker_binding_ip() {
+  local container="$1"
+  local container_port="$2"
+  docker_binding_lines "$container" "$container_port" | awk 'NF {print $1; exit}'
+}
+
+docker_binding_ip_by_family() {
+  local container="$1"
+  local container_port="$2"
+  local family="$3"
+  if [[ "$family" == "ipv6" ]]; then
+    docker_binding_lines "$container" "$container_port" | awk '$1 ~ /:/ {print $1; exit}'
+  else
+    docker_binding_lines "$container" "$container_port" | awk '$1 !~ /:/ {print $1; exit}'
+  fi
+}
+
+docker_binding_port_by_family() {
+  local container="$1"
+  local container_port="$2"
+  local family="$3"
+  if [[ "$family" == "ipv6" ]]; then
+    docker_binding_lines "$container" "$container_port" | awk '$1 ~ /:/ {print $2; exit}'
+  else
+    docker_binding_lines "$container" "$container_port" | awk '$1 !~ /:/ {print $2; exit}'
+  fi
 }
 
 detect_legacy_running_container() {
@@ -1690,35 +1912,58 @@ diag_reset_state() {
 
 diag_domain_dns_view() {
   local domain="$1"
-  local server_ip="$2"
+  local server_ipv4="$2"
+  local server_ipv6="$3"
+  local need_ipv4="$4"
+  local need_ipv6="$5"
   local resolver=""
   local records=""
   printf '[info] %s: %s\n' "$(t diag_public_dns)" "$domain"
+  if is_valid_ipv4 "$domain"; then
+    printf '[info] %s\n' "$(t diag_literal_ipv4)"
+    return 0
+  fi
   if ! command -v dig >/dev/null 2>&1; then
     printf '[warn] %s: dig\n' "$(t diag_tool_missing)"
     return 0
   fi
   for resolver in 1.1.1.1 8.8.8.8 9.9.9.9; do
-    records="$(resolve_domain_a_records_via_resolver "$domain" "$resolver" || true)"
-    if [[ -z "$records" ]]; then
-      printf '[warn] %s %s\n' "$resolver" "$(t diag_resolver_missing)"
-      DIAG_DNS_ISSUE=1
-    elif [[ -n "$server_ip" ]] && ! grep -qx "$server_ip" <<<"$records"; then
-      printf '[warn] %s %s %s\n' "$resolver" "$(t diag_resolver_mismatch)" "$(diag_format_records "$records")"
-      DIAG_DNS_ISSUE=1
-    else
-      printf '[ok] %s %s %s\n' "$resolver" "$(t diag_resolver_match)" "$(diag_format_records "$records")"
+    if [[ "$need_ipv4" == "1" ]]; then
+      records="$(resolve_domain_a_records_via_resolver "$domain" "$resolver" || true)"
+      if [[ -z "$records" ]]; then
+        printf '[warn] %s A %s\n' "$resolver" "$(t diag_resolver_missing)"
+        DIAG_DNS_ISSUE=1
+      elif [[ -n "$server_ipv4" ]] && ! grep -qx "$server_ipv4" <<<"$records"; then
+        printf '[warn] %s A %s %s\n' "$resolver" "$(t diag_resolver_mismatch)" "$(diag_format_records "$records")"
+        DIAG_DNS_ISSUE=1
+      else
+        printf '[ok] %s A %s %s\n' "$resolver" "$(t diag_resolver_match)" "$(diag_format_records "$records")"
+      fi
+    fi
+    if [[ "$need_ipv6" == "1" ]]; then
+      records="$(resolve_domain_aaaa_records_via_resolver "$domain" "$resolver" || true)"
+      if [[ -z "$records" ]]; then
+        printf '[warn] %s AAAA %s\n' "$resolver" "$(t diag_resolver_missing)"
+        DIAG_DNS_ISSUE=1
+      elif [[ -n "$server_ipv6" ]] && ! grep -Fqx "$server_ipv6" <<<"$records"; then
+        printf '[warn] %s AAAA %s %s\n' "$resolver" "$(t diag_resolver_mismatch)" "$(diag_format_records "$records")"
+        DIAG_DNS_ISSUE=1
+      else
+        printf '[ok] %s AAAA %s %s\n' "$resolver" "$(t diag_resolver_match)" "$(diag_format_records "$records")"
+      fi
     fi
   done
 }
 
 diag_mode_regional() {
   local mode="$1"
-  local server_ip="$2"
+  local server_ipv4="$2"
+  local server_ipv6="$3"
   local env_file=""
   local health_rc=0
   local entry_domain=""
-  local bind_ip=""
+  local bind_ipv4=""
+  local bind_ipv6=""
   local port=""
   local front_domain=""
 
@@ -1748,19 +1993,21 @@ diag_mode_regional() {
   source "$env_file"
   if [[ "$mode" == "ee" ]]; then
     entry_domain="${EE_DOMAIN:-}"
-    bind_ip="${EE_BIND_IP:-0.0.0.0}"
+    bind_ipv4="${EE_BIND_IP:-0.0.0.0}"
+    bind_ipv6="${EE_BIND_IPV6:-}"
     port="${EE_PORT:-}"
     front_domain="${FRONT_DOMAIN:-}"
   else
     entry_domain="${DD_DOMAIN:-}"
-    bind_ip="${DD_BIND_IP:-0.0.0.0}"
+    bind_ipv4="${DD_BIND_IP:-0.0.0.0}"
+    bind_ipv6="${DD_BIND_IPV6:-}"
     port="${DD_PORT:-}"
   fi
 
   printf '[info] %s: %s\n' "$(t diag_entry_domain)" "${entry_domain:-n/a}"
-  printf '[info] %s: %s:%s\n' "$(t diag_bind)" "${bind_ip:-0.0.0.0}" "${port:-n/a}"
+  printf '[info] %s: %s\n' "$(t diag_bind)" "$(format_bind_targets "${bind_ipv4:-}" "${bind_ipv6:-}" "${port:-n/a}")"
   if [[ -n "$entry_domain" ]]; then
-    diag_domain_dns_view "$entry_domain" "$server_ip"
+    diag_domain_dns_view "$entry_domain" "$server_ipv4" "$server_ipv6" "$([[ -n "$bind_ipv4" ]] && echo 1 || echo 0)" "$([[ -n "$bind_ipv6" ]] && echo 1 || echo 0)"
   fi
 
   if [[ "$mode" == "ee" && -n "$front_domain" ]]; then
@@ -1782,7 +2029,8 @@ check_mode_health() {
   local container_name=""
   local env_file=""
   local port=""
-  local bind_ip=""
+  local bind_ipv4=""
+  local bind_ipv6=""
   local expected_image=""
   local container_port_key=""
   local ok=0
@@ -1790,8 +2038,10 @@ check_mode_health() {
   local service_restarts=0
   local container_restarts=0
   local running_image=""
-  local actual_bind_ip=""
-  local actual_bind_port=""
+  local actual_bind_ipv4=""
+  local actual_bind_ipv6=""
+  local actual_bind_ipv4_port=""
+  local actual_bind_ipv6_port=""
   local legacy_container_name=""
 
   case "$mode" in
@@ -1841,11 +2091,13 @@ check_mode_health() {
   source "$env_file"
   if [[ "$mode" == "ee" ]]; then
     port="${EE_PORT}"
-    bind_ip="${EE_BIND_IP:-0.0.0.0}"
+    bind_ipv4="${EE_BIND_IP:-0.0.0.0}"
+    bind_ipv6="${EE_BIND_IPV6:-}"
     expected_image="${MTG_IMAGE:-}"
   else
     port="${DD_PORT}"
-    bind_ip="${DD_BIND_IP:-0.0.0.0}"
+    bind_ipv4="${DD_BIND_IP:-0.0.0.0}"
+    bind_ipv6="${DD_BIND_IPV6:-}"
     expected_image="${DD_IMAGE:-}"
     if ! normalize_dd_secret "${DD_BASE_SECRET:-${DD_SECRET:-}}"; then
       printf '[%s] %s\n' "$mode" "$(t err_invalid_dd_secret)"
@@ -1869,11 +2121,28 @@ check_mode_health() {
     ok=1
   fi
 
-  actual_bind_ip="$(docker_binding_ip "$container_name" "$container_port_key")"
-  actual_bind_port="$(docker_binding_port "$container_name" "$container_port_key")"
-  if [[ -n "$actual_bind_port" ]] && { [[ "$actual_bind_port" != "$port" ]] || [[ "$actual_bind_ip" != "$bind_ip" ]]; }; then
+  actual_bind_ipv4="$(docker_binding_ip_by_family "$container_name" "$container_port_key" "ipv4")"
+  actual_bind_ipv4_port="$(docker_binding_port_by_family "$container_name" "$container_port_key" "ipv4")"
+  actual_bind_ipv6="$(docker_binding_ip_by_family "$container_name" "$container_port_key" "ipv6")"
+  actual_bind_ipv6_port="$(docker_binding_port_by_family "$container_name" "$container_port_key" "ipv6")"
+  if [[ -n "$bind_ipv4" ]] && { [[ "$actual_bind_ipv4" != "$bind_ipv4" ]] || [[ "$actual_bind_ipv4_port" != "$port" ]]; }; then
     echo "[${mode}] $(t err_port_binding_mismatch)"
-    echo "[${mode}] $(t label_expected)=${bind_ip}:${port} $(t label_actual)=${actual_bind_ip}:${actual_bind_port}"
+    echo "[${mode}] $(t label_expected)=$(format_bind_targets "$bind_ipv4" "$bind_ipv6" "$port") $(t label_actual)=$(format_bind_targets "$actual_bind_ipv4" "$actual_bind_ipv6" "${actual_bind_ipv4_port:-${actual_bind_ipv6_port:-}}")"
+    ok=1
+  fi
+  if [[ -z "$bind_ipv4" && -n "$actual_bind_ipv4" ]]; then
+    echo "[${mode}] $(t err_port_binding_mismatch)"
+    echo "[${mode}] $(t label_expected)=$(format_bind_targets "$bind_ipv4" "$bind_ipv6" "$port") $(t label_actual)=$(format_bind_targets "$actual_bind_ipv4" "$actual_bind_ipv6" "${actual_bind_ipv4_port:-${actual_bind_ipv6_port:-}}")"
+    ok=1
+  fi
+  if [[ -n "$bind_ipv6" ]] && { [[ "$actual_bind_ipv6" != "$bind_ipv6" ]] || [[ "$actual_bind_ipv6_port" != "$port" ]]; }; then
+    echo "[${mode}] $(t err_port_binding_mismatch)"
+    echo "[${mode}] $(t label_expected)=$(format_bind_targets "$bind_ipv4" "$bind_ipv6" "$port") $(t label_actual)=$(format_bind_targets "$actual_bind_ipv4" "$actual_bind_ipv6" "${actual_bind_ipv4_port:-${actual_bind_ipv6_port:-}}")"
+    ok=1
+  fi
+  if [[ -z "$bind_ipv6" && -n "$actual_bind_ipv6" ]]; then
+    echo "[${mode}] $(t err_port_binding_mismatch)"
+    echo "[${mode}] $(t label_expected)=$(format_bind_targets "$bind_ipv4" "$bind_ipv6" "$port") $(t label_actual)=$(format_bind_targets "$actual_bind_ipv4" "$actual_bind_ipv6" "${actual_bind_ipv4_port:-${actual_bind_ipv6_port:-}}")"
     ok=1
   fi
 
@@ -1938,20 +2207,25 @@ cmd_self_heal() {
 }
 
 cmd_regional_diagnose() {
-  local server_ip=""
+  local server_ipv4=""
+  local server_ipv6=""
   diag_reset_state
-  server_ip="$(get_primary_ipv4)"
+  server_ipv4="$(get_primary_ipv4)"
+  server_ipv6="$(get_primary_ipv6)"
 
   echo
   t step_region_diag
   printf '[note] %s\n' "$(t diag_scope_note)"
-  printf '[info] %s: %s\n' "$(t diag_server_ip)" "${server_ip:-n/a}"
+  printf '[info] %s: %s\n' "$(t diag_server_ip)" "${server_ipv4:-n/a}"
+  if [[ -n "$server_ipv6" ]]; then
+    printf '[info] %s: %s\n' "$(t note_server_ipv6)" "${server_ipv6}"
+  fi
 
   if [[ "$DEPLOY_EE" -eq 1 ]]; then
-    diag_mode_regional ee "$server_ip"
+    diag_mode_regional ee "$server_ipv4" "$server_ipv6"
   fi
   if [[ "$DEPLOY_DD" -eq 1 ]]; then
-    diag_mode_regional dd "$server_ip"
+    diag_mode_regional dd "$server_ipv4" "$server_ipv6"
   fi
 
   echo
@@ -2029,7 +2303,8 @@ cmd_migrate() {
   local migrated_any=0
   local ee_legacy_container=""
   local dd_legacy_container=""
-  local detected_server_ip=""
+  local detected_server_ipv4=""
+  local detected_server_ipv6=""
   local existing_ee_domain=""
   local existing_dd_domain=""
   local existing_front_domain=""
@@ -2042,7 +2317,8 @@ cmd_migrate() {
   ensure_config_dir
   mkdir -p /opt/mtg
   chmod 700 /opt/mtg
-  detected_server_ip="$(get_primary_ipv4)"
+  detected_server_ipv4="$(get_primary_ipv4)"
+  detected_server_ipv6="$(get_primary_ipv6)"
 
   if [[ "$DEPLOY_EE" -eq 1 ]]; then
     ee_legacy_container="$(detect_legacy_running_container ee || true)"
@@ -2076,17 +2352,24 @@ cmd_migrate() {
     EE_DOMAIN="${ee_domain_arg:-$existing_ee_domain}"
     existing_front_domain="$(read_env_key "$EE_ENV_FILE" "FRONT_DOMAIN" || true)"
     FRONT_DOMAIN="${front_domain_arg:-$existing_front_domain}"
-    EE_BIND_IP="$(docker_binding_ip "$ee_legacy_container" "3128/tcp")"
-    EE_PORT="$(docker_binding_port "$ee_legacy_container" "3128/tcp")"
+    EE_BIND_IP="$(docker_binding_ip_by_family "$ee_legacy_container" "3128/tcp" "ipv4")"
+    EE_BIND_IPV6="$(docker_binding_ip_by_family "$ee_legacy_container" "3128/tcp" "ipv6")"
+    EE_PORT="$(docker_binding_port_by_family "$ee_legacy_container" "3128/tcp" "ipv4")"
+    if [[ -z "$EE_PORT" ]]; then
+      EE_PORT="$(docker_binding_port_by_family "$ee_legacy_container" "3128/tcp" "ipv6")"
+    fi
     if [[ -z "$EE_PORT" ]]; then
       t err_migrate_port_missing
       return 1
     fi
-    fallback_host="${detected_server_ip:-$EE_BIND_IP}"
+    if [[ -z "$EE_BIND_IP" ]]; then
+      EE_BIND_IP="0.0.0.0"
+    fi
+    fallback_host="${detected_server_ipv4:-$EE_BIND_IP}"
     if [[ -z "$fallback_host" || "$fallback_host" == "0.0.0.0" ]]; then
       fallback_host="$(hostname -I 2>/dev/null | awk '{print $1}')"
     fi
-    fallback_host="${fallback_host:-127.0.0.1}"
+    fallback_host="${fallback_host:-${detected_server_ipv6:-127.0.0.1}}"
     if [[ -z "$EE_DOMAIN" ]]; then
       EE_DOMAIN="$fallback_host"
       printf '%s %s\n' "$(t warn_ee_domain_fallback)" "$EE_DOMAIN"
@@ -2120,17 +2403,24 @@ EOF
   if [[ "$DEPLOY_DD" -eq 1 ]]; then
     existing_dd_domain="$(read_env_key "$DD_ENV_FILE" "DD_DOMAIN" || true)"
     DD_DOMAIN="${dd_domain_arg:-$existing_dd_domain}"
-    DD_BIND_IP="$(docker_binding_ip "$dd_legacy_container" "443/tcp")"
-    DD_PORT="$(docker_binding_port "$dd_legacy_container" "443/tcp")"
+    DD_BIND_IP="$(docker_binding_ip_by_family "$dd_legacy_container" "443/tcp" "ipv4")"
+    DD_BIND_IPV6="$(docker_binding_ip_by_family "$dd_legacy_container" "443/tcp" "ipv6")"
+    DD_PORT="$(docker_binding_port_by_family "$dd_legacy_container" "443/tcp" "ipv4")"
+    if [[ -z "$DD_PORT" ]]; then
+      DD_PORT="$(docker_binding_port_by_family "$dd_legacy_container" "443/tcp" "ipv6")"
+    fi
     if [[ -z "$DD_PORT" ]]; then
       t err_migrate_port_missing
       return 1
     fi
-    fallback_host="${detected_server_ip:-$DD_BIND_IP}"
+    if [[ -z "$DD_BIND_IP" ]]; then
+      DD_BIND_IP="0.0.0.0"
+    fi
+    fallback_host="${detected_server_ipv4:-$DD_BIND_IP}"
     if [[ -z "$fallback_host" || "$fallback_host" == "0.0.0.0" ]]; then
       fallback_host="$(hostname -I 2>/dev/null | awk '{print $1}')"
     fi
-    fallback_host="${fallback_host:-127.0.0.1}"
+    fallback_host="${fallback_host:-${detected_server_ipv6:-127.0.0.1}}"
     if [[ -z "$DD_DOMAIN" ]]; then
       DD_DOMAIN="$fallback_host"
       printf '%s %s\n' "$(t warn_dd_domain_fallback)" "$DD_DOMAIN"
@@ -2432,10 +2722,13 @@ EOF
 
 command_install() {
   local SERVER_IPV4=""
+  local SERVER_IPV6=""
   local ENABLE_BBR="Y"
   local STRICT_UFW="N"
   local EE_BIND_IP="0.0.0.0"
+  local EE_BIND_IPV6=""
   local DD_BIND_IP="0.0.0.0"
+  local DD_BIND_IPV6=""
 
   if [[ "${SKIP_LANGUAGE_PROMPT:-0}" != "1" ]]; then
     select_language
@@ -2460,21 +2753,24 @@ command_install() {
   DD_SECRET=""
 
   SERVER_IPV4="$(get_primary_ipv4)"
+  SERVER_IPV6="$(get_primary_ipv6)"
 
   if [[ "$DEPLOY_EE" -eq 1 ]]; then
     ask_domain ask_ee_domain EE_DOMAIN
     ask_front_domain_with_options
     ask_port_with_options ask_ee_port EE_PORT "443" "8443" "9443"
     ask_bind_ip_with_options EE_BIND_IP "$SERVER_IPV4"
+    ask_bind_ipv6_with_options EE_BIND_IPV6 "$SERVER_IPV6"
   fi
 
   if [[ "$DEPLOY_DD" -eq 1 ]]; then
     ask_domain ask_dd_domain DD_DOMAIN
     ask_port_with_options ask_dd_port DD_PORT "8443" "443" "9443"
     ask_bind_ip_with_options DD_BIND_IP "$SERVER_IPV4"
+    ask_bind_ipv6_with_options DD_BIND_IPV6 "$SERVER_IPV6"
   fi
 
-  if [[ "$DEPLOY_EE" -eq 1 && "$DEPLOY_DD" -eq 1 ]] && ports_conflict_for_bindings "$EE_PORT" "$EE_BIND_IP" "$DD_PORT" "$DD_BIND_IP"; then
+  if [[ "$DEPLOY_EE" -eq 1 && "$DEPLOY_DD" -eq 1 ]] && ports_conflict_for_bindings "$EE_PORT" "$EE_BIND_IP" "$EE_BIND_IPV6" "$DD_PORT" "$DD_BIND_IP" "$DD_BIND_IPV6"; then
     t err_port_conflict
     exit 1
   fi
@@ -2483,7 +2779,7 @@ command_install() {
   read -r ENABLE_BBR
   ENABLE_BBR="${ENABLE_BBR:-Y}"
 
-  if [[ ("$DEPLOY_EE" -eq 1 && "$EE_BIND_IP" != "0.0.0.0") || ("$DEPLOY_DD" -eq 1 && "$DD_BIND_IP" != "0.0.0.0") ]]; then
+  if [[ ("$DEPLOY_EE" -eq 1 && ( "$EE_BIND_IP" != "0.0.0.0" || -n "$EE_BIND_IPV6" )) || ("$DEPLOY_DD" -eq 1 && ( "$DD_BIND_IP" != "0.0.0.0" || -n "$DD_BIND_IPV6" )) ]]; then
     echo -n "$(t ask_strict_ufw)"
     read -r STRICT_UFW
     STRICT_UFW="${STRICT_UFW:-N}"
@@ -2499,10 +2795,10 @@ command_install() {
   echo
   t step_dns_check
   if [[ "$DEPLOY_EE" -eq 1 ]]; then
-    check_domain_dns "$EE_DOMAIN" "$SERVER_IPV4"
+    check_domain_dns "$EE_DOMAIN" "$SERVER_IPV4" "$SERVER_IPV6" "1" "$([[ -n "$EE_BIND_IPV6" ]] && echo 1 || echo 0)"
   fi
   if [[ "$DEPLOY_DD" -eq 1 ]]; then
-    check_domain_dns "$DD_DOMAIN" "$SERVER_IPV4"
+    check_domain_dns "$DD_DOMAIN" "$SERVER_IPV4" "$SERVER_IPV6" "1" "$([[ -n "$DD_BIND_IPV6" ]] && echo 1 || echo 0)"
   fi
 
   echo
@@ -2537,9 +2833,11 @@ EOF
   done < <(collect_sshd_ports)
   if [[ "$DEPLOY_EE" -eq 1 ]]; then
     ufw_allow_proxy_port "$EE_PORT" "$EE_BIND_IP" "$STRICT_UFW"
+    ufw_allow_proxy_port "$EE_PORT" "$EE_BIND_IPV6" "$STRICT_UFW"
   fi
   if [[ "$DEPLOY_DD" -eq 1 ]]; then
     ufw_allow_proxy_port "$DD_PORT" "$DD_BIND_IP" "$STRICT_UFW"
+    ufw_allow_proxy_port "$DD_PORT" "$DD_BIND_IPV6" "$STRICT_UFW"
   fi
   if ufw status | grep -qi inactive; then
     ufw --force enable >/dev/null
